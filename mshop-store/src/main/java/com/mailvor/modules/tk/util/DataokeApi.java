@@ -54,7 +54,13 @@ public enum DataokeApi {
     PDD_GOODS_SEARCH("https://openapi.dataoke.com/api/dels/pdd/goods/search", "v2.0.0","拼多多联盟搜索"),
     PDD_GOODS_DETAIL("https://openapi.dataoke.com/api/dels/pdd/goods/detail", "v2.0.0","拼多多"),
     PDD_GOODS_WORD("https://openapi.dataoke.com/api/dels/pdd/kit/goods-prom-generate","v2.0.0","拼多多商品转链"),
-    PDD_GOODS_CATE("https://openapi.dataoke.com/api/dels/pdd/category/search", "v1.0.0","拼多多商品类目查询");
+    PDD_GOODS_CATE("https://openapi.dataoke.com/api/dels/pdd/category/search", "v1.0.0","拼多多商品类目查询"),
+
+    // ===== 会员备案（B2B2C 归因前提）=====
+    // 注意：这两个接口的路径前缀是 /open-api/（不是其它枚举的 /api/），
+    // 与抖客订单同族，主机名为 openapiv2.dataoke.com。
+    TB_RELATION_RECORD("https://openapiv2.dataoke.com/open-api/tb-service/get-relation-record", "v1.0.0","会员备案授权链接"),
+    TB_PUBLISHER_INFO("https://openapiv2.dataoke.com/open-api/tb-service/get-publisher-info", "v1.0.0","会员备案信息查询");
 
     private String url;
     private String version;

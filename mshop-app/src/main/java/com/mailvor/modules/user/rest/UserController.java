@@ -29,6 +29,7 @@ import com.mailvor.modules.push.service.JPushService;
 import com.mailvor.modules.shop.service.MwSystemConfigService;
 import com.mailvor.modules.shop.service.MwSystemGroupDataService;
 import com.mailvor.modules.tk.config.TbConfig;
+import com.mailvor.modules.tk.service.TbMemberFilingService;
 import com.mailvor.modules.tools.domain.SensitiveWord;
 import com.mailvor.modules.tools.service.SensitiveWordService;
 import com.mailvor.modules.tools.utils.SensitiveWordUtil;
@@ -98,6 +99,9 @@ public class UserController {
     @Resource
     private MwUserBankService bankService;
 
+    @Resource
+    private TbMemberFilingService filingService;
+
     @GetMapping("/push")
     @ApiOperation(value = "测试推送",notes = "测试推送",response = MwUserQueryVo.class)
     public ApiResult<Object> push(@RequestParam Long uid, @RequestParam String msg){
@@ -149,7 +153,18 @@ public class UserController {
         if(mwUser != null) {
             mwUser = mwUserService.getById(mwUser.getUid());
         }
-        return ApiResult.ok(mwUserService.getCommissionInfo(mwUser));
+        Object info = mwUserService.getCommissionInfo(mwUser);
+
+        // 未备案推客看佣金时给出提示：推广了却归不到佣金，问题必须当场暴露。
+        // 只提示不阻断——佣金信息本身对用户仍有价值。
+        if(info instanceof MwCommissionInfoQueryVo && mwUser != null) {
+            MwCommissionInfoQueryVo queryVo = (MwCommissionInfoQueryVo) info;
+            Long uid = mwUser.getUid();
+            queryVo.setTbFilingFiled(Boolean.valueOf(filingService.isFiled(uid)));
+            queryVo.setTbFilingHint(filingService.hintFor(uid));
+        }
+
+        return ApiResult.ok(info);
     }
     /**
      * 用户删除

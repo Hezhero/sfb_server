@@ -538,4 +538,66 @@ public class DataokeService {
         log.warn("拼多多订单："+ data);
         return JSON.parseObject(data, PddResVo.class);
     }
+
+    // ------------------------------------------------------------------
+    // 会员备案（B2B2C 归因前提）
+    // 上游主机为 openapiv2.dataoke.com，路径前缀 /open-api/，与其它接口不同。
+    // ------------------------------------------------------------------
+
+    /**
+     * 获取会员备案授权链接。
+     *
+     * <p>推客拿到该链接后去淘宝完成渠道备案，备案成功其推广订单才能归因到本平台。</p>
+     *
+     * @param relationApp 备案类型：1-邀请人，2-渠道，3-推客
+     * @param pid         渠道推广位 ID
+     * @return 上游响应；网络异常或返回无法解析时返回 null（由调用方转中文化提示）
+     */
+    public TbRelationRecordVo getRelationRecord(Integer relationApp, String pid) {
+        TreeMap<String, Object> paraMap = new TreeMap<>();
+        paraMap.put("relationApp", relationApp);
+        if (StringUtils.isNotBlank(pid)) {
+            paraMap.put("pid", pid);
+        }
+        return requestFiling(DataokeApi.TB_RELATION_RECORD, paraMap, TbRelationRecordVo.class);
+    }
+
+    /**
+     * 查询会员备案信息。
+     *
+     * @param pid 渠道推广位 ID
+     * @return 上游响应；网络异常或返回无法解析时返回 null（由调用方转中文化提示）
+     */
+    public TbPublisherInfoVo getPublisherInfo(String pid) {
+        TreeMap<String, Object> paraMap = new TreeMap<>();
+        paraMap.put("pid", pid);
+        return requestFiling(DataokeApi.TB_PUBLISHER_INFO, paraMap, TbPublisherInfoVo.class);
+    }
+
+    /**
+     * 会员备案类接口的统一请求与解析。
+     *
+     * <p>与其它方法的区别：上游异常/脏报文统一收敛成 {@code null}，不向上抛异常，
+     * 也不把 {@code DataokeApiClient} 返回的裸中文字符串当正常报文透传——
+     * 备案是结算前置条件，任何"看起来成功"的误判都会直接导致资损。</p>
+     */
+    private <T> T requestFiling(DataokeApi api, TreeMap<String, Object> paraMap, Class<T> clazz) {
+        String data;
+        try {
+            data = getData(api.getUrl(), api.getVersion(), paraMap);
+        } catch (RuntimeException e) {
+            log.error("大淘客会员备案接口调用异常 api={} err={}", api.getDesc(), e.getMessage());
+            return null;
+        }
+        if (StringUtils.isBlank(data) || !data.trim().startsWith("{")) {
+            log.error("大淘客会员备案接口返回非 JSON api={} resp={}", api.getDesc(), data);
+            return null;
+        }
+        try {
+            return JSON.parseObject(data, clazz);
+        } catch (RuntimeException e) {
+            log.error("大淘客会员备案接口响应解析失败 api={} resp={}", api.getDesc(), data);
+            return null;
+        }
+    }
 }

@@ -43,4 +43,12 @@ public class MwCommissionInfoQueryVo implements Serializable {
     private Double pddTimes;
     private Double dyTimes;
     private Double vipTimes;
+
+    /** 淘宝渠道备案状态：true已备案 false未备案；null表示无需校验（未登录） */
+    @ApiModelProperty(value = "淘宝渠道备案状态：true已备案 false未备案")
+    private Boolean tbFilingFiled;
+
+    /** 未备案时的中文引导提示，已备案为null */
+    @ApiModelProperty(value = "未备案提示")
+    private String tbFilingHint;
 }

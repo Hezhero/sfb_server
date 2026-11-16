@@ -12,6 +12,7 @@ import com.mailvor.modules.shop.service.MwSystemConfigService;
 import com.mailvor.modules.tk.config.TbConfig;
 import com.mailvor.modules.tk.param.*;
 import com.mailvor.modules.tk.service.DataokeService;
+import com.mailvor.modules.tk.service.TbMemberFilingService;
 import com.mailvor.modules.tk.service.TkService;
 import com.mailvor.modules.tk.vo.DataokeResVo;
 import com.mailvor.modules.tk.vo.GoodsParseVo;
@@ -68,6 +69,9 @@ public class DataokeController {
 
     @Resource
     private MwUserService userService;
+
+    @Resource
+    private TbMemberFilingService filingService;
     /**
      * redis保存在线地址 key:url.home, value参照根目录data/home.json
      * */
@@ -140,6 +144,17 @@ public class DataokeController {
         }
 
         JSONObject resVo = service.goodsWord(goodsId, pid, channelId);
+
+        // 未备案推客的提示：不阻断转链（本地备案状态可能滞后于淘宝），
+        // 但要在响应里带上标记，让 App 及时引导用户去完成备案。
+        if (resVo != null && mwUser != null) {
+            Long loginUid = mwUser.getUid();
+            resVo.put("filingFiled", Boolean.valueOf(filingService.isFiled(loginUid)));
+            String filingHint = filingService.hintFor(loginUid);
+            if (filingHint != null) {
+                resVo.put("filingHint", filingHint);
+            }
+        }
 
         return resVo;
 
