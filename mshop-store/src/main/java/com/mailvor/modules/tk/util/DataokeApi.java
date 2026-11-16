@@ -61,7 +61,22 @@ public enum DataokeApi {
     // 注意：路径前缀是 /open-api/（不是其它枚举的 /api/），但主机名仍是 openapi.dataoke.com。
     // 不要写成 openapiv2.dataoke.com —— 那是抖客订单 DY_QUERY_ORDER 专用域名，备案接口不在其上。
     TB_RELATION_RECORD("https://openapi.dataoke.com/open-api/tb-service/get-relation-record", "v1.0.0","会员备案授权链接"),
-    TB_PUBLISHER_INFO("https://openapi.dataoke.com/open-api/tb-service/get-publisher-info", "v1.0.0","会员备案信息查询");
+    TB_PUBLISHER_INFO("https://openapi.dataoke.com/open-api/tb-service/get-publisher-info", "v1.0.0","会员备案信息查询"),
+
+    // ===== 商品库同步三件套（工单 05）=====
+    // 官方文档：id=3（商品更新）、id=11（失效商品）、id=12（定时拉取）。
+    // 三个接口都用 scroll_id 分页：首次传 pageId=1，后续传上次响应返回的 pageId。
+    // version 取自各自文档页的「接口版本号」标签，不要照抄别的接口的版本号。
+    GOODS_NEWEST("https://openapi.dataoke.com/api/goods/get-newest-goods", "v1.2.0","商品更新（增量）"),
+    GOODS_STALE("https://openapi.dataoke.com/api/goods/get-stale-goods-by-time", "v1.0.1","失效商品"),
+    GOODS_PULL_BY_TIME("https://openapi.dataoke.com/api/goods/pull-goods-by-time", "v1.2.3","定时拉取商品"),
+
+    // ===== 违规订单（工单 04）=====
+    // 官方文档：https://www.dataoke.com/pmc/api-d.html?id=86
+    // 淘宝联盟判定店铺淘宝客 / 订单虚假交易后冻结或扣除佣金，本地必须据此把这些订单
+    // 排除出结算，否则结算金额会系统性地高于实际到账，是直接资损。
+    // 注意：本接口路径前缀是 /api/（不是备案那两个接口的 /open-api/）。
+    TB_FOUL_ORDER("https://openapi.dataoke.com/api/tb-service/get-foul-order-list", "v1.0.0","违规订单查询");
 
     private String url;
     private String version;

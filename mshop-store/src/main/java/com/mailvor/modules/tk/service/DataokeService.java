@@ -31,6 +31,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -633,5 +635,237 @@ public class DataokeService {
             log.error("大淘客会员备案接口响应解析失败 api={} resp={}", api.getDesc(), data);
             return null;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // 商品库同步三件套（工单 05）
+    // 官方文档：api-d.html?id=3（商品更新）、id=11（失效商品）、id=12（定时拉取）。
+    // 三个接口共用 scroll_id 分页协议，翻页循环统一交给 DtkScrollPager。
+    // ------------------------------------------------------------------
+
+    /**
+     * 拉取一页「商品更新」（官方 {@code get-newest-goods}，v1.2.0）。
+     *
+     * <p>官方参数表（id=3）：{@code pageId} 必填（scroll_id 分页，首次传 1）、
+     * {@code pageSize} 必填（仅 10/50/100/200，默认 10），其余可选。</p>
+     *
+     * <p><b>注意</b>：本接口官方响应<b>不含</b> title / mainPic / shopName，
+     * 只有价格与分类字段。需要完整字段请用 {@link #pullGoodsByTime}。</p>
+     *
+     * @param param 分页与筛选参数，{@code pageId} 应为本次要请求的游标
+     * @return 上游原始 JSON；网络异常或报文不可解析时返回 {@code null}
+     */
+    public JSONObject newestGoods(GetNewestGoodsParam param) {
+        TreeMap<String, Object> paraMap = param.toParamMap();
+        String data = getData(DataokeApi.GOODS_NEWEST.getUrl(),
+                DataokeApi.GOODS_NEWEST.getVersion(), paraMap);
+        return parseGoodsPage(DataokeApi.GOODS_NEWEST, paraMap, data);
+    }
+
+    /**
+     * 拉取一页「失效商品」（官方 {@code get-stale-goods-by-time}，v1.0.1）。
+     *
+     * <p>官方参数表（id=11）：{@code pageId} 必填、{@code pageSize} 可选（默认 100）、
+     * {@code startTime} / {@code endTime} 可选。</p>
+     *
+     * <p><b>查询窗口仅限 24 小时</b>：{@code startTime} 只能追溯到最近 24 小时内的下架记录。
+     * 窗口收敛由调用方负责（见 {@code DtkGoodsSyncService}）。</p>
+     *
+     * @param param 分页与时间窗口参数
+     * @return 上游原始 JSON；网络异常或报文不可解析时返回 {@code null}
+     */
+    public JSONObject staleGoods(StaleGoodsParam param) {
+        TreeMap<String, Object> paraMap = param.toParamMap();
+        String data = getData(DataokeApi.GOODS_STALE.getUrl(),
+                DataokeApi.GOODS_STALE.getVersion(), paraMap);
+        return parseGoodsPage(DataokeApi.GOODS_STALE, paraMap, data);
+    }
+
+    /**
+     * 拉取一页「定时拉取商品」（官方 {@code pull-goods-by-time}，v1.2.3）。
+     *
+     * <p>官方参数表（id=12）：{@code pageId} 必填、其余可选。响应字段最全（约 50 个），
+     * 是本地商品库字段的唯一完整来源。</p>
+     *
+     * @param param 分页与筛选参数
+     * @return 上游原始 JSON；网络异常或报文不可解析时返回 {@code null}
+     */
+    public JSONObject pullGoodsByTime(PullGoodsByTimeParam param) {
+        TreeMap<String, Object> paraMap = param.toParamMap();
+        String data = getData(DataokeApi.GOODS_PULL_BY_TIME.getUrl(),
+                DataokeApi.GOODS_PULL_BY_TIME.getVersion(), paraMap);
+        return parseGoodsPage(DataokeApi.GOODS_PULL_BY_TIME, paraMap, data);
+    }
+
+    /**
+     * 商品库类接口的统一响应处理。
+     *
+     * <p>与 {@link #requestFiling} 的区别：商品同步是<b>批量定时任务</b>，失败不应抛异常
+     * 中断整轮任务，但要能区分「上游返回了错误码」和「报文根本没解析出来」——
+     * 前者记 warn（可能是参数/权限问题），后者记 error（网络或上游故障）。
+     * 两者都返回 {@code null}，由调用方的翻页器按「本页没有数据」终止。</p>
+     */
+    private JSONObject parseGoodsPage(DataokeApi api, TreeMap<String, Object> paraMap, String data) {
+        if (StringUtils.isBlank(data) || !data.trim().startsWith("{")) {
+            // DataokeApiClient 在参数/密钥缺失时返回裸中文字符串，这里必须当失败处理
+            log.error("大淘客商品库接口返回非 JSON api={} 参数={} resp={}",
+                    api.getDesc(), paraMap, data);
+            return null;
+        }
+        JSONObject res;
+        try {
+            res = JSON.parseObject(data);
+        } catch (RuntimeException e) {
+            log.error("大淘客商品库接口响应解析失败 api={} resp={}", api.getDesc(), data);
+            return null;
+        }
+        if (res == null) {
+            return null;
+        }
+        Integer code = res.getInteger("code");
+        if (code == null || code != 0) {
+            // 官方错误码表：-1 服务器错误、1 参数错误
+            log.warn("大淘客商品库接口返回错误码 api={} code={} msg={} 参数={}",
+                    api.getDesc(), code, res.getString("msg"), paraMap);
+        }
+        return res;
+    }
+
+    // ------------------------------------------------------------------
+    // 违规订单（工单 04）
+    // 官方文档：https://www.dataoke.com/pmc/api-d.html?id=86
+    // 路径前缀是 /api/（与备案接口的 /open-api/ 不同），主机 openapi.dataoke.com。
+    //
+    // 业务背景：淘宝联盟判定「店铺淘宝客」「订单虚假交易」后会冻结或扣除佣金。
+    // 本地若不查，结算给推客的金额会系统性地高于实际到账 —— 这是直接资损。
+    // ------------------------------------------------------------------
+
+    /** 官方限制：查询时间跨度不超过 30 天。超过会被上游拒掉，因此在组装参数时就夹住。 */
+    public static final int FOUL_ORDER_MAX_SPAN_DAYS = 30;
+
+    /** 官方默认每页 10 条；本平台统一取 100，减少往返次数。 */
+    public static final int FOUL_ORDER_PAGE_SIZE = 100;
+
+    /**
+     * 组装「违规订单查询」{@code get-foul-order-list} 的请求参数。
+     *
+     * <p>参数名严格照官方 {@code request_tree0}，一个不多一个不少：</p>
+     * <ul>
+     *   <li>{@code startTime} 必填，查询开始时间（以淘客订单创建时间起算），格式 {@code yyyy-MM-dd HH:mm:ss}</li>
+     *   <li>{@code span} 查询时间跨度，单位天，<b>不超过 30</b></li>
+     *   <li>{@code pageNo} 页码，从 1 开始</li>
+     *   <li>{@code pageSize} 每页条数，官方默认 10</li>
+     *   <li>{@code tbTradeId} 选填，按子订单号精确查</li>
+     * </ul>
+     *
+     * <p><b>为什么 span 总是下发</b>：它是时间窗口上界而非普通分页参数。不传的话上游
+     * 按自己的默认跨度处理，可能直接越过 30 天限制报错；因此这里不省略，而是夹到
+     * {@code [1, 30]} 后下发。其余选填项为 null 时<b>不放进 map</b> ——
+     * {@code SignMD5Util} 会把 null 拼成 {@code pageNo=null}，直接验签失败。</p>
+     *
+     * @param startTime 查询开始时间，null/空白时按「今天 00:00:00」兜底
+     * @param span      查询跨度（天），null 或超出范围时夹到 [1, 30]
+     * @param pageNo    页码，null 时用 1
+     * @param pageSize  每页条数，null 时用 {@link #FOUL_ORDER_PAGE_SIZE}
+     * @param tbTradeId 子订单号，可为 null
+     * @return 按 key 字典序排好的参数字典（签名依赖字典序，必须是 TreeMap）
+     */
+    public TreeMap<String, Object> foulOrderParams(String startTime, Integer span,
+                                                   Integer pageNo, Integer pageSize,
+                                                   String tbTradeId) {
+        TreeMap<String, Object> paraMap = new TreeMap<>();
+        paraMap.put("startTime", normalizeFoulStartTime(startTime));
+        paraMap.put("span", clampFoulSpan(span));
+        if (pageNo != null && pageNo > 0) {
+            paraMap.put("pageNo", pageNo);
+        }
+        if (pageSize != null && pageSize > 0) {
+            paraMap.put("pageSize", pageSize);
+        }
+        if (StringUtils.isNotBlank(tbTradeId)) {
+            // 官方类型标 Number，但子订单号是 19 位，超出 int 精度。
+            // 按字符串传上游同样受理（官方示例值本身就是字符串形态），且能避免精度丢失。
+            paraMap.put("tbTradeId", tbTradeId.trim());
+        }
+        return paraMap;
+    }
+
+    /**
+     * 校验并收敛 {@code span} 到官方允许的 [1, 30] 天。
+     *
+     * @param span 调用方期望的跨度，可为 null
+     * @return 合法跨度；null 或越界时给出 {@link #FOUL_ORDER_MAX_SPAN_DAYS}
+     */
+    public static int clampFoulSpan(Integer span) {
+        if (span == null || span < 1 || span > FOUL_ORDER_MAX_SPAN_DAYS) {
+            return FOUL_ORDER_MAX_SPAN_DAYS;
+        }
+        return span;
+    }
+
+    /**
+     * 把 {@code startTime} 收敛成官方要求的 {@code yyyy-MM-dd HH:mm:ss}。
+     *
+     * <p>允许调用方只传日期（官方调用示例给的就是 {@code "2021-12-10"}），
+     * 此时补足 {@code 00:00:00}，避免上游因格式不符返回「参数错误」。</p>
+     */
+    public static String normalizeFoulStartTime(String startTime) {
+        if (StringUtils.isBlank(startTime)) {
+            return LocalDate.now().atStartOfDay()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        String v = startTime.trim();
+        if (v.length() == 10 && v.charAt(4) == '-' && v.charAt(7) == '-') {
+            return v + " 00:00:00";
+        }
+        return v;
+    }
+
+    /**
+     * 拉取一页违规订单（官方 {@code get-foul-order-list}）。
+     *
+     * <p>与 {@link #queryTBList} 等方法的区别：上游失败时不吞异常、不返回半成品，
+     * 而是统一返回 {@code null} 并记日志，由调用方的翻页器按「本页没数据」收尾 ——
+     * 违规订单关系到结算，宁可这轮不更新，也不能把残缺报文当成功。</p>
+     *
+     * @param startTime 查询开始时间
+     * @param span      查询跨度（天），内部会夹到 30
+     * @param pageNo    页码，从 1 开始
+     * @param pageSize  每页条数
+     * @param tbTradeId 子订单号，可为 null
+     * @return 解析后的响应；上游出错或报文无法解析时返回 null
+     */
+    public FoulOrderResVo queryFoulOrderList(String startTime, Integer span,
+                                             Integer pageNo, Integer pageSize,
+                                             String tbTradeId) {
+        TreeMap<String, Object> paraMap = foulOrderParams(startTime, span, pageNo, pageSize, tbTradeId);
+        String data;
+        try {
+            data = getData(TB_FOUL_ORDER.getUrl(), TB_FOUL_ORDER.getVersion(), paraMap);
+        } catch (RuntimeException e) {
+            log.error("大淘客违规订单接口调用异常 参数={} err={}", paraMap, e.getMessage());
+            return null;
+        }
+        if (StringUtils.isBlank(data) || !data.trim().startsWith("{")) {
+            // DataokeApiClient 在参数/密钥缺失时返回的是裸中文字符串而不是 JSON
+            log.error("大淘客违规订单接口返回非 JSON 参数={} resp={}", paraMap, data);
+            return null;
+        }
+        FoulOrderResVo res;
+        try {
+            res = JSON.parseObject(data, FoulOrderResVo.class);
+        } catch (RuntimeException e) {
+            log.error("大淘客违规订单接口响应解析失败 参数={} resp={}", paraMap, data);
+            return null;
+        }
+        if (res == null) {
+            return null;
+        }
+        if (!res.isSuccess()) {
+            // 官方错误码表：-1 服务器错误、1 参数错误
+            log.warn("大淘客违规订单接口返回错误码 code={} msg={} 参数={}",
+                    res.getCode(), res.getMsg(), paraMap);
+        }
+        return res;
     }
 }

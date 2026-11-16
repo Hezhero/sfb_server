@@ -12,6 +12,7 @@ import com.mailvor.modules.shop.service.MwSystemConfigService;
 import com.mailvor.modules.tk.config.TbConfig;
 import com.mailvor.modules.tk.param.*;
 import com.mailvor.modules.tk.service.DataokeService;
+import com.mailvor.modules.tk.service.DtkGoodsStaleFilter;
 import com.mailvor.modules.tk.service.TbMemberFilingService;
 import com.mailvor.modules.tk.service.TkService;
 import com.mailvor.modules.tk.vo.DataokeResVo;
@@ -72,6 +73,10 @@ public class DataokeController {
 
     @Resource
     private TbMemberFilingService filingService;
+
+    /** 工单 05：C 端商品查询的失效过滤 */
+    @Resource
+    private DtkGoodsStaleFilter staleFilter;
     /**
      * redis保存在线地址 key:url.home, value参照根目录data/home.json
      * */
@@ -92,13 +97,19 @@ public class DataokeController {
     @GetMapping(value = "/goods/list")
     public JSONObject getGoodList(GoodsListParam goodQueryParam) {
 
-        return service.goodsList(goodQueryParam);
+        // 工单 05：剔除本地已标记失效的商品，避免 C 端点进去发现已下架
+        return staleFilter.filterGoodsList(service.goodsList(goodQueryParam));
     }
 
     @GetMapping(value = "/goods/search")
     public DataokeResVo<GoodsSearchDataVo> goodsSearch(GoodsSearchParam goodQueryParam) {
 
-        return service.goodsSearch(goodQueryParam);
+        // 工单 05：搜索链路同样剔除失效商品
+        DataokeResVo<GoodsSearchDataVo> res = service.goodsSearch(goodQueryParam);
+        if (res != null) {
+            res.setData(staleFilter.filterGoodsSearch(res.getData()));
+        }
+        return res;
     }
     @GetMapping(value = "/goods/detail")
     public JSONObject getGoodsDetail(String goodsId) {
