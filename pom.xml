@@ -296,6 +296,17 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- JUnit Platform 平台下运行 JUnit 4 测试：缺少 vintage engine 会导致 JUnit 4 用例被静默跳过。 -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

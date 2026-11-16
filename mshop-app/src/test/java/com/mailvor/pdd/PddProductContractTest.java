@@ -25,6 +25,8 @@ public class PddProductContractTest {
 
     private PddService sdk() {
         config.setPid("pid-test");
+        // 生产中 paramPrefix 由 Spring 从配置注入；这里显式给定，避免依赖未注入的 null 值
+        config.setParamPrefix("sfbuid");
         PddService service = new PddService();
         ReflectionTestUtils.setField(service, "client", client);
         ReflectionTestUtils.setField(service, "pddConfig", config);
@@ -84,7 +86,9 @@ public class PddProductContractTest {
                 .map(call -> call.getArguments()[0]).filter(PddDdkGoodsPromotionUrlGenerateRequest.class::isInstance)
                 .findFirst().get();
         Map<String, String> params = request.getParamsMap();
-        assertEquals("42", JSON.parseObject(params.get("custom_parameters")).getString("uid"));
+        // custom_parameters 的 key 取自 pdd.paramPrefix（生产配置为 sfbuid），
+        // value 是该用户的 uid，用于拼多多侧归单
+        assertEquals("42", JSON.parseObject(params.get("custom_parameters")).getString("sfbuid"));
         assertTrue(params.get("goods_gen_url_param_list").contains("signed-product"));
         assertEquals("pid-test", params.get("p_id"));
     }

@@ -38,7 +38,9 @@ public class VipProductContractTest {
         param.setOpenId("untrusted-client-id");
         when(service.goodsListVip(param)).thenReturn(result);
         Map<String, Object> data = controller().getGoodList(param).getData();
-        assertEquals("0", param.getOpenId());
+        // 未登录时 openId 为 "sfb_" + 0（唯品会对账靠这个前缀识别本站订单），
+        // 客户端传入的值必须被忽略
+        assertEquals("sfb_0", param.getOpenId());
         assertEquals(1, data.get("total"));
         Map<?, ?> item = (Map<?, ?>) ((List<?>)data.get("list")).get(0);
         assertEquals("羊毛衫", item.get("title"));
@@ -64,7 +66,8 @@ public class VipProductContractTest {
         verify(service).vipGoodsSearch(param.capture());
         assertEquals(keyword, param.getValue().getKeyword());
         assertEquals(Integer.valueOf(2), param.getValue().getPage());
-        assertEquals("0", param.getValue().getOpenId());
+        // 未登录时 openId 固定为 "sfb_0"，不接受客户端伪造
+        assertEquals("sfb_0", param.getValue().getOpenId());
     }
 
     @Test
@@ -72,7 +75,7 @@ public class VipProductContractTest {
         VipGoodsDetailDataVo result = new VipGoodsDetailDataVo();
         result.setCode(0);
         result.setGoods(JSON.parseObject("{\"goodsId\":\"123\",\"goodsName\":\"衬衫\",\"vipPrice\":129.9,\"marketPrice\":399,\"couponInfo\":{\"fav\":20},\"destUrl\":\"https://example.com/item\",\"adCode\":\"ad-123\"}", VipGoodsDetailVO.class));
-        when(service.goodsDetailVIP("123", "0")).thenReturn(result);
+        when(service.goodsDetailVIP("123", "sfb_0")).thenReturn(result);
         Map<String, Object> data = controller().getGoodsDetail("123").getData();
         assertEquals("衬衫", data.get("title"));
         assertEquals(129.9, data.get("endPrice"));
@@ -85,7 +88,7 @@ public class VipProductContractTest {
         VipGoodsDetailDataVo result = new VipGoodsDetailDataVo();
         result.setCode(0);
         result.setData(Collections.emptyList());
-        when(service.goodsDetailVIP("missing", "0")).thenReturn(result);
+        when(service.goodsDetailVIP("missing", "sfb_0")).thenReturn(result);
         assertTrue(controller().getGoodsDetail("missing").getData().isEmpty());
     }
 
@@ -97,13 +100,14 @@ public class VipProductContractTest {
         VipWordCodeVO result = new VipWordCodeVO();
         result.setCode(0);
         result.setWord(JSON.parseObject("{\"deeplinkUrl\":\"vipshop://item\",\"longUrl\":\"https://example.com/item\",\"vipWxUrl\":\"pages/item\"}", VipWordVO.class));
-        when(service.goodsWordVIP(eq("https://example.com/item"), eq("42"), any(JSONObject.class))).thenReturn(result);
+        when(service.goodsWordVIP(eq("https://example.com/item"), eq("sfb_42"), any(JSONObject.class))).thenReturn(result);
         Map<String, Object> word = controller().goodsWord("https://example.com/item", "ad-123").getData();
         assertEquals("vipshop://item", word.get("link"));
         assertEquals("pages/item", word.get("wechatPath"));
         ArgumentCaptor<JSONObject> request = ArgumentCaptor.forClass(JSONObject.class);
-        verify(service).goodsWordVIP(eq("https://example.com/item"), eq("42"), request.capture());
-        assertEquals("42", request.getValue().getString("openId"));
+        verify(service).goodsWordVIP(eq("https://example.com/item"), eq("sfb_42"), request.capture());
+        // 登录用户的 openId 带平台前缀，用于唯品会侧的对账归属
+        assertEquals("sfb_42", request.getValue().getString("openId"));
         assertEquals("ad-123", request.getValue().getString("adCode"));
     }
 
