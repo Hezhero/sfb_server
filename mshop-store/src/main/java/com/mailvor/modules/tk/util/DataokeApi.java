@@ -57,10 +57,11 @@ public enum DataokeApi {
     PDD_GOODS_CATE("https://openapi.dataoke.com/api/dels/pdd/category/search", "v1.0.0","拼多多商品类目查询"),
 
     // ===== 会员备案（B2B2C 归因前提）=====
-    // 注意：这两个接口的路径前缀是 /open-api/（不是其它枚举的 /api/），
-    // 与抖客订单同族，主机名为 openapiv2.dataoke.com。
-    TB_RELATION_RECORD("https://openapiv2.dataoke.com/open-api/tb-service/get-relation-record", "v1.0.0","会员备案授权链接"),
-    TB_PUBLISHER_INFO("https://openapiv2.dataoke.com/open-api/tb-service/get-publisher-info", "v1.0.0","会员备案信息查询");
+    // 官方文档：https://www.dataoke.com/api-d.html?id=135（备案授权链接）、id=136（备案信息查询）
+    // 注意：路径前缀是 /open-api/（不是其它枚举的 /api/），但主机名仍是 openapi.dataoke.com。
+    // 不要写成 openapiv2.dataoke.com —— 那是抖客订单 DY_QUERY_ORDER 专用域名，备案接口不在其上。
+    TB_RELATION_RECORD("https://openapi.dataoke.com/open-api/tb-service/get-relation-record", "v1.0.0","会员备案授权链接"),
+    TB_PUBLISHER_INFO("https://openapi.dataoke.com/open-api/tb-service/get-publisher-info", "v1.0.0","会员备案信息查询");
 
     private String url;
     private String version;

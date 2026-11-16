@@ -40,6 +40,10 @@ public class MwTbFilingLog extends BaseDomain {
     @ApiModelProperty(value = "备案使用的渠道推广位pid")
     private String tbPid;
 
+    /** 变更时的会员关系 ID（sid），官方字段 special_id，便于事后对账 */
+    @ApiModelProperty(value = "会员关系ID（sid，官方 special_id）")
+    private Long specialId;
+
     @ApiModelProperty(value = "变更前状态：1已备案 0未备案，null表示首次记录")
     private Integer fromStatus;
 

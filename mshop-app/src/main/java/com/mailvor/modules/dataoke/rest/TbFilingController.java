@@ -39,15 +39,21 @@ public class TbFilingController {
     /**
      * 获取本人的淘宝渠道备案授权链接。
      *
-     * @param pid 兼容旧前端的可选入参，**不会被采信**：
-     *            实际使用服务端配置的渠道推广位，避免把备案关系绑到他人名下
+     * @param redirectUrl 备案完成后要跳转的淘宝商品短链（官方 {@code get-relation-record}
+     *                    的必填参数）。用 query 参数传递而不是请求体：本端点只读、
+     *                    无副作用地"拿一条链接"，GET + query 与语义一致，
+     *                    也避免空 body 的 GET 在部分客户端上被丢弃。
+     *                    <b>不提供默认值</b>：官方语义是"跳转实际转链后的商品短链"，
+     *                    只有调用方知道用户当时在看哪个商品；服务端兜底填首页会让用户
+     *                    完成备案后落到无关页面。缺失时返回中文化参数错误。
      */
     @UserCheck
     @GetMapping(value = "/relation/url")
     @ApiOperation(value = "获取会员备案授权链接",
             notes = "返回推客专属的淘宝渠道备案链接，完成备案后推广订单才能归因到本平台")
-    public ApiResult<TbFilingResultVo> relationUrl(@RequestParam(required = false) String pid) {
-        return ApiResult.ok(filingService.getRelationUrl(currentUid(), pid), "获取成功");
+    public ApiResult<TbFilingResultVo> relationUrl(
+            @RequestParam(required = false) String redirectUrl) {
+        return ApiResult.ok(filingService.getRelationUrl(currentUid(), redirectUrl), "获取成功");
     }
 
     /** 查询本人的备案状态；未备案时返回可直接展示给用户的中文提示 */

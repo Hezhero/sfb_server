@@ -26,11 +26,16 @@ import java.util.Objects;
  * 无法归因到本平台，佣金从源头就断。因此备案是 B2B2C 模式的合法性前提，
  * 也是转链与佣金结算的前置校验项。</p>
  *
- * <p><b>上游两个接口</b>（主机 {@code openapiv2.dataoke.com}，前缀 {@code /open-api/}）：</p>
+ * <p><b>上游两个接口</b>（官方文档，主机 {@code openapi.dataoke.com}，前缀 {@code /open-api/}）：</p>
  * <ul>
- *   <li>{@code get-relation-record} —— 生成推客专属的备案授权链接</li>
- *   <li>{@code get-publisher-info} —— 查询推客当前的备案状态</li>
+ *   <li>{@code get-relation-record}（api-d.html?id=135）—— 生成推客专属的备案授权链接</li>
+ *   <li>{@code get-publisher-info}（api-d.html?id=136）—— 查询推客当前的备案记录</li>
  * </ul>
+ *
+ * <p><b>身份映射</b>：两个接口都按 {@code externalId}（私域用户自定义唯一标识）+
+ * {@code externalType}（渠道类型）识别用户，本平台传推客 uid 的字符串形式，
+ * 渠道类型固定 {@link DataokeService#EXTERNAL_TYPE_OTHER}（0=其他）。
+ * 官方参数里没有 pid，本地 {@code tb_pid} 只作为追溯用的渠道标识保留。</p>
  *
  * <p><b>错误处理原则</b>：上游错误码一律翻译成中文可读提示，不把原始 code / 原文
  * 抛给前端；同时把「无法确认」按「未备案」处理，宁可多提示一次，也不让未备案的
@@ -40,8 +45,8 @@ import java.util.Objects;
 @Service
 public class TbMemberFilingService {
 
-    /** 备案类型：3-推客（官方 relationApp 取值 1邀请人 / 2渠道 / 3推客） */
-    private static final int RELATION_APP_PUBLISHER = 3;
+    /** 渠道类型固定为 0（其他），语义见官方文档 externalType */
+    private static final int EXTERNAL_TYPE = DataokeService.EXTERNAL_TYPE_OTHER;
 
     /** 备案状态：1-已备案 */
     private static final int STATUS_FILED = 1;
@@ -66,23 +71,31 @@ public class TbMemberFilingService {
     /**
      * 获取推客的备案授权链接，并把链接落库。
      *
-     * @param uid 推客 uid
-     * @param pid 调用方传入的推广位（**不采信**，仅用于兼容旧前端；实际使用服务端配置的渠道 pid）
+     * <p>官方 {@code get-relation-record} 的四个必填参数在此补齐：</p>
+     * <ul>
+     *   <li>{@code externalId} = 推客 uid 字符串</li>
+     *   <li>{@code externalType} = 0（其他）</li>
+     *   <li>{@code opType} = 1 新绑 / 2 更新，判定规则见 {@link #decideOpType(MwTbFiling)}</li>
+     *   <li>{@code redirectUrl} = 调用方传入的商品短链</li>
+     * </ul>
+     *
+     * @param uid         推客 uid
+     * @param redirectUrl 备案完成后跳转的淘宝商品短链（官方必填）
      * @return 含授权链接与当前备案状态的结果
      */
     @Transactional(rollbackFor = Exception.class)
-    public TbFilingResultVo getRelationUrl(Long uid, String pid) {
+    public TbFilingResultVo getRelationUrl(Long uid, String redirectUrl) {
         if (uid == null || uid <= 0) {
             throw new MshopException("请先登录后再获取备案链接");
         }
-        // 推客自报 pid 不可信：用服务端配置的渠道推广位，避免把备案关系绑到他人名下
-        String channelPid = tbConfig == null ? null : tbConfig.getChannelPid();
-        if (StringUtils.isBlank(channelPid)) {
-            throw new MshopException("淘宝渠道推广位未配置，暂无法生成备案授权链接");
-        }
-        String usePid = channelPid.trim();
+        String useRedirectUrl = normalizeRedirectUrl(redirectUrl);
+        String externalId = externalId(uid);
+        // 只查一次本地记录：既决定 opType，也作为落库目标，避免重复查询
+        MwTbFiling filing = getOrInit(uid);
+        int opType = decideOpType(filing);
 
-        TbRelationRecordVo response = dataokeService.getRelationRecord(RELATION_APP_PUBLISHER, usePid);
+        TbRelationRecordVo response = dataokeService.getRelationRecord(
+                externalId, EXTERNAL_TYPE, opType, useRedirectUrl);
         if (response == null || !response.isSuccess()) {
             throw new MshopException("会员备案授权链接获取失败，请稍后重试");
         }
@@ -91,7 +104,6 @@ public class TbMemberFilingService {
             throw new MshopException("会员备案授权链接获取失败，请稍后重试");
         }
 
-        MwTbFiling filing = getOrInit(uid, usePid);
         filing.setRelationUrl(url);
         filing.setUpdateTime(new Date());
         if (filing.getId() == null) {
@@ -107,7 +119,7 @@ public class TbMemberFilingService {
     }
 
     /**
-     * 主动查询上游备案状态并落库，返回最新状态。
+     * 主动查询上游备案记录并落库，返回最新状态。
      *
      * <p>状态发生变更时写一条 {@link MwTbFilingLog}，作为结算争议的追溯依据；
      * 状态没变不写，避免推客每次刷新都产生噪音。</p>
@@ -117,26 +129,35 @@ public class TbMemberFilingService {
         if (uid == null || uid <= 0) {
             throw new MshopException("请先登录后再查询备案状态");
         }
-        String channelPid = tbConfig == null ? null : tbConfig.getChannelPid();
-        if (StringUtils.isBlank(channelPid)) {
-            throw new MshopException("淘宝渠道推广位未配置，暂无法查询备案状态");
-        }
-        String usePid = channelPid.trim();
 
-        TbPublisherInfoVo response = dataokeService.getPublisherInfo(usePid);
+        TbPublisherInfoVo response = dataokeService.getPublisherInfo(externalId(uid), EXTERNAL_TYPE);
         if (response == null || !response.isSuccess()) {
             throw new MshopException("会员备案信息查询失败，请稍后重试");
         }
 
-        MwTbFiling filing = getOrInit(uid, usePid);
+        MwTbFiling filing = getOrInit(uid);
         Integer fromStatus = filing.getRelationStatus();
-        int newStatus = response.getRelationStatus() != null && response.getRelationStatus() == STATUS_FILED
-                ? STATUS_FILED : STATUS_UNFILED;
+        // 官方不返回状态字段，只返回 total_count + inviter_list，
+        // 因此 isFiled() 是「total_count > 0 且 inviter_list 非空」的推断。
+        int newStatus = response.isFiled() ? STATUS_FILED : STATUS_UNFILED;
 
         filing.setRelationStatus(newStatus);
+        filing.setTotalCount(response.getTotalCount());
         filing.setUpdateTime(new Date());
         if (newStatus == STATUS_FILED && filing.getFiledTime() == null) {
             filing.setFiledTime(new Date());
+        }
+
+        // inviter_list 可能有多条：只落最新一条（列表首条）的明细 + 记录总数。
+        TbPublisherInfoVo.Inviter latest = response.getLatestInviter();
+        if (latest != null) {
+            filing.setSpecialId(latest.getSpecialId());
+            filing.setRootPid(trimToNull(latest.getRootPid()));
+            filing.setAccountName(trimToNull(latest.getAccountName()));
+            // root_pid 就是备案时实际使用的推广位，落库便于对账
+            if (StringUtils.isNotBlank(latest.getRootPid())) {
+                filing.setTbPid(trimToNull(latest.getRootPid()));
+            }
         }
 
         if (filing.getId() == null) {
@@ -149,7 +170,8 @@ public class TbMemberFilingService {
         if (!Objects.equals(fromStatus, newStatus)) {
             MwTbFilingLog statusLog = MwTbFilingLog.builder()
                     .uid(uid)
-                    .tbPid(usePid)
+                    .tbPid(filing.getTbPid())
+                    .specialId(filing.getSpecialId())
                     .fromStatus(fromStatus)
                     .relationStatus(newStatus)
                     .remark(newStatus == STATUS_FILED ? "备案完成" : "备案状态变更为未备案")
@@ -159,9 +181,7 @@ public class TbMemberFilingService {
             filingLogMapper.insert(statusLog);
         }
 
-        TbFilingResultVo result = toResult(filing);
-        result.setSpecialPid(StringUtils.isBlank(response.getSpecialPid()) ? null : response.getSpecialPid().trim());
-        return result;
+        return toResult(filing);
     }
 
     /**
@@ -189,9 +209,7 @@ public class TbMemberFilingService {
         if (uid == null || uid <= 0) {
             return true;
         }
-        MwTbFiling filing = filingMapper.selectOne((Wrappers.<MwTbFiling>lambdaQuery()
-                .eq(MwTbFiling::getUid, uid)
-                .last("limit 1")));
+        MwTbFiling filing = findFiling(uid);
         return filing != null && filing.isFiled();
     }
 
@@ -208,23 +226,82 @@ public class TbMemberFilingService {
         return isFiled(uid) ? null : HINT_UNFILED;
     }
 
+    /**
+     * 判定 {@code opType}：1 新绑 / 2 更新。
+     *
+     * <p><b>官方文档只给了取值含义，没给判定规则</b>，这里按「本地是否已有备案记录」推断：
+     * 本地无记录（首次备案）→ 1 新绑；本地已有记录且曾经拿到过授权链接或已备案 → 2 更新。</p>
+     *
+     * <p>之所以不额外调一次 {@code get-publisher-info} 来判定：那会给「取链接」这个
+     * 高频轻接口叠加一次上游往返与失败面，而 opType 传错的后果只是上游对已存在关系
+     * 重新发一次绑定请求（幂等），代价远小于多一次跨网调用。</p>
+     */
+    private int decideOpType(MwTbFiling filing) {
+        boolean hasLocalRecord = filing != null
+                && (filing.isFiled() || StringUtils.isNotBlank(filing.getRelationUrl()));
+        return hasLocalRecord ? DataokeService.OP_TYPE_UPDATE : DataokeService.OP_TYPE_BIND;
+    }
+
+    /**
+     * 校验并归一化 {@code redirectUrl}（官方必填）。
+     *
+     * <p><b>为什么不给默认值</b>：官方语义是「授权完成后跳转实际转链后的商品短链」，
+     * 也就是用户完成备案后落在哪个商品上，只有调用方（App 转链上下文）知道。
+     * 服务端随便填一个首页短链会让用户在完成备案后跳到无关页面，
+     * 而备案是不可撤销的一次性动作——这种体验损失远大于让调用方显式传参的成本。
+     * 因此缺参数时直接返回中文化错误，暴露调用方 bug，而不是静默兜底。</p>
+     */
+    private String normalizeRedirectUrl(String redirectUrl) {
+        if (StringUtils.isBlank(redirectUrl)) {
+            throw new MshopException("缺少备案完成后的跳转商品短链，暂无法生成备案链接");
+        }
+        String url = redirectUrl.trim();
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            throw new MshopException("备案完成后的跳转地址格式不正确");
+        }
+        return url;
+    }
+
+    /**
+     * 推客身份映射到上游 {@code externalId}。
+     *
+     * <p>官方定义是「私域用户自定义唯一标识」，本平台用 uid 保证唯一且稳定；
+     * 一旦变更，历史备案关系会全部失效，因此不要改成昵称/手机号等可变字段。</p>
+     */
+    private String externalId(Long uid) {
+        return String.valueOf(uid);
+    }
+
     /** 读取本地备案记录，没有则构造一条新记录（尚未入库） */
-    private MwTbFiling getOrInit(Long uid, String pid) {
-        MwTbFiling filing = filingMapper.selectOne((Wrappers.<MwTbFiling>lambdaQuery()
-                .eq(MwTbFiling::getUid, uid)
-                .last("limit 1")));
+    private MwTbFiling getOrInit(Long uid) {
+        MwTbFiling filing = findFiling(uid);
         if (filing != null) {
-            filing.setTbPid(pid);
             return filing;
         }
         filing = MwTbFiling.builder()
                 .uid(uid)
-                .tbPid(pid)
+                .tbPid(channelPidOrNull())
                 .relationStatus(STATUS_UNFILED)
                 .build();
         filing.setCreateTime(new Date());
         filing.setUpdateTime(new Date());
         return filing;
+    }
+
+    private MwTbFiling findFiling(Long uid) {
+        return filingMapper.selectOne((Wrappers.<MwTbFiling>lambdaQuery()
+                .eq(MwTbFiling::getUid, uid)
+                .last("limit 1")));
+    }
+
+    /** 服务端配置的渠道推广位，仅用于追溯（官方备案参数里没有 pid），未配置时返回 null */
+    private String channelPidOrNull() {
+        String pid = tbConfig == null ? null : tbConfig.getChannelPid();
+        return StringUtils.isBlank(pid) ? null : pid.trim();
+    }
+
+    private static String trimToNull(String value) {
+        return StringUtils.isBlank(value) ? null : value.trim();
     }
 
     private TbFilingResultVo toResult(MwTbFiling filing) {
@@ -236,6 +313,10 @@ public class TbMemberFilingService {
         result.setRelationStatus(filing.getRelationStatus() == null ? STATUS_UNFILED : filing.getRelationStatus());
         result.setStatusText(filed ? "已备案" : "未备案");
         result.setRelationUrl(filing.getRelationUrl());
+        result.setSpecialId(filing.getSpecialId());
+        result.setRootPid(filing.getRootPid());
+        result.setAccountName(filing.getAccountName());
+        result.setTotalCount(filing.getTotalCount());
         result.setFiledTime(filing.getFiledTime());
         result.setHint(filed ? null : HINT_UNFILED);
         return result;

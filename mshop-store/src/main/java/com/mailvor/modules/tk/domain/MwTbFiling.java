@@ -45,7 +45,7 @@ public class MwTbFiling extends BaseDomain {
     @ApiModelProperty(value = "备案使用的渠道推广位pid")
     private String tbPid;
 
-    /** 与上游 relation_status 对齐：1-已备案 0-未备案 */
+    /** 与上游推断出的状态对齐：1-已备案 0-未备案 */
     @ApiModelProperty(value = "备案状态：1已备案 0未备案")
     private Integer relationStatus;
 
@@ -54,6 +54,24 @@ public class MwTbFiling extends BaseDomain {
 
     @ApiModelProperty(value = "备案授权链接")
     private String relationUrl;
+
+    // ----- 官方 get-publisher-info 返回的备案明细（多条时只存最新一条，总数另记） -----
+
+    /** 会员关系 ID（sid），官方字段 special_id */
+    @ApiModelProperty(value = "会员关系ID（sid，官方 special_id）")
+    private Long specialId;
+
+    /** 推广位 PID，官方字段 root_pid */
+    @ApiModelProperty(value = "推广位PID（官方 root_pid）")
+    private String rootPid;
+
+    /** 会员淘宝昵称，官方字段 account_name */
+    @ApiModelProperty(value = "会员淘宝昵称（官方 account_name）")
+    private String accountName;
+
+    /** 备案记录总数，官方字段 total_count（inviter_list 可能有多条，这里只存总数+最新一条） */
+    @ApiModelProperty(value = "备案记录总数（官方 total_count）")
+    private Integer totalCount;
 
     @ApiModelProperty(value = "备注")
     private String remark;

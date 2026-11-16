@@ -541,36 +541,70 @@ public class DataokeService {
 
     // ------------------------------------------------------------------
     // 会员备案（B2B2C 归因前提）
-    // 上游主机为 openapiv2.dataoke.com，路径前缀 /open-api/，与其它接口不同。
+    // 官方文档：https://www.dataoke.com/api-d.html?id=135 / id=136
+    // 主机 openapi.dataoke.com，路径前缀 /open-api/（与其它 /api/ 接口不同）。
     // ------------------------------------------------------------------
 
+    /** externalType 渠道类型：0-其他（本平台统一按「其他」上报，不走微信/微博等渠道） */
+    public static final int EXTERNAL_TYPE_OTHER = 0;
+
+    /** opType 操作类型：1-新绑（首次备案） */
+    public static final int OP_TYPE_BIND = 1;
+
+    /** opType 操作类型：2-更新（已有备案记录时重新生成授权链接） */
+    public static final int OP_TYPE_UPDATE = 2;
+
     /**
-     * 获取会员备案授权链接。
+     * 获取会员备案授权链接（官方 {@code get-relation-record}）。
      *
-     * <p>推客拿到该链接后去淘宝完成渠道备案，备案成功其推广订单才能归因到本平台。</p>
+     * <p>官方参数表（api-d.html?id=135）：</p>
+     * <ul>
+     *   <li>{@code externalId} 必填，私域用户自定义唯一标识 —— 本平台传推客 uid 的字符串</li>
+     *   <li>{@code externalType} 必填，渠道类型 0其他 1微信 2微博 3抖音 4快手 5QQ —— 固定 0</li>
+     *   <li>{@code opType} 必填，1新绑 2更新 —— 由调用方按「是否已有备案记录」决定</li>
+     *   <li>{@code redirectUrl} 必填，授权完成后跳转实际转链后的商品短链</li>
+     *   <li>{@code authId} / {@code ucrowdId} 选填，本平台不传（用默认授权）</li>
+     * </ul>
      *
-     * @param relationApp 备案类型：1-邀请人，2-渠道，3-推客
-     * @param pid         渠道推广位 ID
+     * <p><b>注意</b>：历史实现里的 {@code relationApp} / {@code pid} 两个参数在官方文档中
+     * 并不存在，已删除。</p>
+     *
+     * @param externalId   私域用户自定义唯一标识（推客 uid 的字符串形式）
+     * @param externalType 渠道类型，见 {@link #EXTERNAL_TYPE_OTHER}
+     * @param opType       操作类型：1新绑 2更新
+     * @param redirectUrl  授权完成后跳转的商品短链
      * @return 上游响应；网络异常或返回无法解析时返回 null（由调用方转中文化提示）
      */
-    public TbRelationRecordVo getRelationRecord(Integer relationApp, String pid) {
+    public TbRelationRecordVo getRelationRecord(String externalId, int externalType,
+                                                int opType, String redirectUrl) {
         TreeMap<String, Object> paraMap = new TreeMap<>();
-        paraMap.put("relationApp", relationApp);
-        if (StringUtils.isNotBlank(pid)) {
-            paraMap.put("pid", pid);
-        }
+        paraMap.put("externalId", externalId);
+        paraMap.put("externalType", externalType);
+        paraMap.put("opType", opType);
+        paraMap.put("redirectUrl", redirectUrl);
         return requestFiling(DataokeApi.TB_RELATION_RECORD, paraMap, TbRelationRecordVo.class);
     }
 
     /**
-     * 查询会员备案信息。
+     * 查询会员备案信息（官方 {@code get-publisher-info}）。
      *
-     * @param pid 渠道推广位 ID
+     * <p>官方参数表（api-d.html?id=136）：</p>
+     * <ul>
+     *   <li>{@code externalId} 必填，私域用户自定义唯一标识 —— 与生成授权链接时保持一致</li>
+     *   <li>{@code externalType} 必填，渠道类型 —— 与生成授权链接时保持一致（固定 0）</li>
+     *   <li>{@code authId} 选填，本平台不传</li>
+     * </ul>
+     *
+     * <p><b>注意</b>：历史实现只传 {@code pid}，那不是官方参数，已删除。</p>
+     *
+     * @param externalId   私域用户自定义唯一标识（推客 uid 的字符串形式）
+     * @param externalType 渠道类型，见 {@link #EXTERNAL_TYPE_OTHER}
      * @return 上游响应；网络异常或返回无法解析时返回 null（由调用方转中文化提示）
      */
-    public TbPublisherInfoVo getPublisherInfo(String pid) {
+    public TbPublisherInfoVo getPublisherInfo(String externalId, int externalType) {
         TreeMap<String, Object> paraMap = new TreeMap<>();
-        paraMap.put("pid", pid);
+        paraMap.put("externalId", externalId);
+        paraMap.put("externalType", externalType);
         return requestFiling(DataokeApi.TB_PUBLISHER_INFO, paraMap, TbPublisherInfoVo.class);
     }
 

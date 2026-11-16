@@ -11,10 +11,17 @@ import java.io.Serializable;
 /**
  * 大淘客「获取会员备案授权链接」响应（{@code get-relation-record}）。
  *
- * <p>推客拿到这条链接后去淘宝完成渠道备案，备案成功后其推广订单才能归因到本平台。</p>
+ * <p>官方文档 https://www.dataoke.com/api-d.html?id=135 的响应体只有一个字段：</p>
  *
- * <p>上游不同版本的文档对承载链接的字段名有出入（{@code tb_relation_record} /
- * {@code relation_record} / {@code url}），这里全部兼容，解析时按优先级取第一个非空的。</p>
+ * <pre>
+ * { "code": 0, "msg": "成功", "data": { "url": "备案授权链接" } }
+ * </pre>
+ *
+ * <p>推客打开 {@code data.url} 去淘宝完成渠道备案，备案成功后其推广订单才能归因到本平台。</p>
+ *
+ * <p>历史实现曾对 {@code tb_relation_record} / {@code relation_record} 做过别名兜底，
+ * 那是按推测写的；官方文档只定义了 {@code url}，故此处按官方规格收敛为单一字段。
+ * 字段名解析仍走 fastjson 的 {@code @JSONField(name = "url")}，与文档一一对应。</p>
  */
 @lombok.Data
 @ApiModel(value = "TbRelationRecordVo", description = "会员备案授权链接响应")
@@ -39,20 +46,14 @@ public class TbRelationRecordVo implements Serializable {
     /**
      * 备案授权链接；上游未返回或返回空白时给出 null。
      *
-     * <p>别名优先级：{@code tb_relation_record} → {@code relation_record} → {@code url}。</p>
+     * <p>字段名按官方文档取 {@code data.url}，不再做别名兜底。</p>
      */
     @JSONField(serialize = false, deserialize = false)
     public String getRelationUrl() {
         if (!isSuccess() || data == null) {
             return null;
         }
-        String[] candidates = {data.getTbRelationRecord(), data.getRelationRecord(), data.getUrl()};
-        for (String candidate : candidates) {
-            if (StringUtils.isNotBlank(candidate)) {
-                return candidate.trim();
-            }
-        }
-        return null;
+        return StringUtils.isBlank(data.getUrl()) ? null : data.getUrl().trim();
     }
 
     @lombok.Data
@@ -60,19 +61,9 @@ public class TbRelationRecordVo implements Serializable {
     public static class Data implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        /** 渠道备案授权链接（官方主字段名） */
-        @JSONField(name = "tb_relation_record")
-        @ApiModelProperty(value = "备案授权链接")
-        private String tbRelationRecord;
-
-        /** 兼容字段：部分文档版本写作 relation_record */
-        @JSONField(name = "relation_record")
-        @ApiModelProperty(value = "备案授权链接（兼容字段）")
-        private String relationRecord;
-
-        /** 兼容字段：部分文档版本写作 url */
+        /** 渠道备案授权链接（官方唯一字段） */
         @JSONField(name = "url")
-        @ApiModelProperty(value = "备案授权链接（兼容字段）")
+        @ApiModelProperty(value = "备案授权链接")
         private String url;
     }
 }

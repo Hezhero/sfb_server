@@ -36,8 +36,17 @@ public class TbFilingResultVo implements Serializable {
     @ApiModelProperty(value = "备案授权链接")
     private String relationUrl;
 
-    @ApiModelProperty(value = "淘宝分配的专用推广位（备案成功后返回）")
-    private String specialPid;
+    @ApiModelProperty(value = "会员关系ID（sid，官方 special_id）")
+    private Long specialId;
+
+    @ApiModelProperty(value = "推广位PID（官方 root_pid）")
+    private String rootPid;
+
+    @ApiModelProperty(value = "会员淘宝昵称（官方 account_name）")
+    private String accountName;
+
+    @ApiModelProperty(value = "备案记录总数（官方 total_count）")
+    private Integer totalCount;
 
     @ApiModelProperty(value = "备案完成时间")
     private Date filedTime;
