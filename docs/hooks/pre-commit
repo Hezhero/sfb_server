@@ -1,0 +1,61 @@
+#!/bin/sh
+# server 仓库 pre-commit hook（retro 2026-11-17 产出）
+#
+# 三项确定性检查，拦住本次会话反复出现的机械错误：
+#   1. 明文配置文件不得进入暂存区
+#   2. 暂存文本文件行尾符规范化（LF）——只在 git 索引层，不改工作区
+#   3. 订单实体加字段时必须有 DDL 随行（提示，不阻断）
+#
+# 安装：cp docs/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+# ---- 1. 明文配置文件拦截（硬阻断）----
+FORBIDDEN='(^|/)application-(dev|prod)\.yml$'
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+bad=$(printf '%s\n' "$staged" | grep -E "$FORBIDDEN" || true)
+if [ -n "$bad" ]; then
+  printf "${RED}拒绝提交：以下配置文件含明文密钥，不得入仓：${NC}\n%s\n" "$bad"
+  printf "如确需提交，请先确认已打码。\n"
+  exit 1
+fi
+
+# ---- 2. 行尾符规范化（自动修复，不阻断）----
+# 取所有暂存的文本文件，把 CRLF 转为 LF 后重新暂存。
+# 注意：只在索引层操作，不动工作区；这与 .gitattributes 的 CRLF 索引兼容，
+# 因为这里只规范化「本次改动的行」对应的整个文件——若 diff 因此变大，
+# 说明该文件本来就是 CRLF 索引，hook 会跳过它（见下面的探测）。
+TEXT_EXT='\.(java|xml|yml|yaml|sql|md|json|properties|txt)$'
+normalized=0
+for f in $(printf '%s\n' "$staged" | grep -E "$TEXT_EXT" || true); do
+  [ -f "$f" ] || continue
+  # 若 HEAD 中该文件是 CRLF，跳过（避免整文件假 diff）
+  if git show "HEAD:$f" 2>/dev/null | grep -qU $'\r'; then
+    continue
+  fi
+  # 工作区含 CRLF 且 HEAD 是 LF → 规范化
+  if grep -qU $'\r' "$f" 2>/dev/null; then
+    sed -i 's/\r$//' "$f"
+    git add "$f"
+    normalized=$((normalized + 1))
+  fi
+done
+if [ "$normalized" -gt 0 ]; then
+  printf "已规范化 %d 个文件的行尾符为 LF\n" "$normalized"
+fi
+
+# ---- 3. 订单实体加字段 → DDL 随行（提示，不阻断）----
+order_domain_changed=$(printf '%s\n' "$staged" | grep -E 'tk/domain/(TkOrder|Mailvor.*Order)\.java$' || true)
+if [ -n "$order_domain_changed" ]; then
+  ddl_changed=$(printf '%s\n' "$staged" | grep -E 'docs/sql/.*\.sql$' || true)
+  if [ -z "$ddl_changed" ]; then
+    printf "${YELLOW}提示：订单实体有变更，但未暂存 docs/sql/ 下的 DDL。${NC}\n"
+    printf "  若新增了字段，请确认 7 张订单表的 ALTER 脚本已加入本次提交。\n"
+  fi
+fi
+
+exit 0
