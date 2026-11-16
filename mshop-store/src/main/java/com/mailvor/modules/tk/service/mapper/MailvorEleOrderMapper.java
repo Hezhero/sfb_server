@@ -67,20 +67,20 @@ public interface MailvorEleOrderMapper extends CoreMapper<MailvorEleOrder> {
     @Select("SELECT IFNULL(sum(pay_price),0) as num," +
             "DATE_FORMAT(pay_time, '%m-%d') as time " +
             " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d') " +
-            " ORDER BY pay_time ASC")
+            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(trade_id) as num," +
             "DATE_FORMAT(pay_time, '%m-%d') as time " +
             " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d') " +
-            " ORDER BY pay_time ASC")
+            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
     @Select("SELECT IFNULL(sum(predict_money),0) as num," +
             "DATE_FORMAT(pay_time, '%m-%d') as time " +
             " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d') " +
-            " ORDER BY pay_time ASC")
+            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_ele set flow_point = 'REFUND'" +

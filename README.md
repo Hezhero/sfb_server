@@ -84,7 +84,7 @@
 | APP 服务 | `com.mailvor.AppServer` | `http://localhost:8008/api` | `sfb` Flutter APP |
 
 ```text
-sfb_server/
+server/
 ├── mshop-admin/   # 管理服务启动入口、运营接口与定时任务
 ├── mshop-app/     # APP 服务启动入口与客户端接口
 ├── mshop-store/   # 用户、订单、佣金、联盟平台等核心业务
@@ -175,8 +175,6 @@ java -jar mshop-app/target/mshop-app-5.1.0.jar --spring.profiles.active=dev
 演示中心包含商业版功能与租户演示，不能直接作为当前开源仓库的功能验收清单。开源版以本 README 和对应源码为准，商业版以官方文档及具体交付版本为准。
 
 ## 使用与版权
-
-完整使用条件见本仓库 [LICENSE](LICENSE) 与官方授权说明。保留项目原有使用约定：
 
 1. 允许用于个人学习、毕业设计、教学案例、公益事业及取得授权后的商业使用。
 2. 商用必须保留版权信息，并支付商用授权费用。

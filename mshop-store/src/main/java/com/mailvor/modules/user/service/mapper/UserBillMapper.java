@@ -36,7 +36,7 @@ public interface UserBillMapper extends CoreMapper<MwUserBill> {
     @Select("SELECT DATE_FORMAT(a.create_time,'%Y-%m-%d') as addTime,a.title,a.number " +
             "FROM mw_user_bill a INNER JOIN mw_user u ON u.uid=a.uid WHERE a.category = 'integral'" +
             " AND a.type = 'sign' AND a.status = 1 AND a.uid = #{uid} " +
-            "ORDER BY a.create_time DESC")
+            "ORDER BY DATE_FORMAT(a.create_time, '%Y-%m-%d') DESC")
     List<SignVo> getSignList(@Param("uid") Long uid, Page page);
 
     @Select("SELECT o.order_id as orderId,DATE_FORMAT(b.create_time, '%Y-%m-%d %H:%i') as time," +

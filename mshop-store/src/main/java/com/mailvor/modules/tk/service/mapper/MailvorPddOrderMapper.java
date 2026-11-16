@@ -68,20 +68,20 @@ public interface MailvorPddOrderMapper extends CoreMapper<MailvorPddOrder> {
     @Select("SELECT IFNULL(sum(order_amount),0) as num," +
             "DATE_FORMAT(order_create_time, '%m-%d') as time " +
             " FROM mw_order_pdd where is_del=0 and inner_type=0 and order_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d') " +
-            " ORDER BY order_create_time ASC")
+            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d'), DATE_FORMAT(order_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(order_sn) as num," +
             "DATE_FORMAT(order_create_time, '%m-%d') as time " +
             " FROM mw_order_pdd where is_del=0 and inner_type=0 and order_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d') " +
-            " ORDER BY order_create_time ASC")
+            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d'), DATE_FORMAT(order_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
     @Select("SELECT IFNULL(sum(promotion_amount),0) as num," +
             "DATE_FORMAT(order_create_time, '%m-%d') as time " +
             " FROM mw_order_pdd where is_del=0 and inner_type=0 and order_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d') " +
-            " ORDER BY order_create_time ASC")
+            " GROUP BY DATE_FORMAT(order_create_time,'%Y-%m-%d'), DATE_FORMAT(order_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_pdd set order_status = 4" +

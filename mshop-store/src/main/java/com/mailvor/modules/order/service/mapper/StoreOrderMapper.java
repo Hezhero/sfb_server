@@ -30,7 +30,8 @@ public interface StoreOrderMapper extends CoreMapper<MwStoreOrder> {
     @Select("SELECT sum(pay_integral) as price,count(id) as count," +
             "DATE_FORMAT(create_time, '%m-%d') as time FROM mw_store_order" +
             " WHERE is_del = 0 " +
-            "GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d') ORDER BY create_time DESC")
+            "GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d'), DATE_FORMAT(create_time, '%m-%d') " +
+            "ORDER BY DATE_FORMAT(create_time, '%Y-%m-%d') DESC")
     List<OrderDataVo> getOrderDataPriceList(Page page);
 
 
@@ -58,13 +59,13 @@ public interface StoreOrderMapper extends CoreMapper<MwStoreOrder> {
     @Select("SELECT IFNULL(sum(pay_integral),0) as num," +
             "DATE_FORMAT(create_time, '%m-%d') as time " +
             " FROM mw_store_order where is_del=0 and create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d') " +
-            " ORDER BY create_time ASC")
+            " GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d'), DATE_FORMAT(create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(id) as num," +
             "DATE_FORMAT(create_time, '%m-%d') as time " +
             " FROM mw_store_order where is_del=0 and create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d') " +
-            " ORDER BY create_time ASC")
+            " GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d'), DATE_FORMAT(create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
 }

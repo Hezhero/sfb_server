@@ -66,20 +66,20 @@ public interface MailvorTbOrderMapper extends CoreMapper<MailvorTbOrder> {
     @Select("SELECT IFNULL(sum(alipay_total_price),0) as num," +
             "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
             " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d') " +
-            " ORDER BY tk_create_time ASC")
+            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(trade_parent_id) as num," +
             "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
             " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d') " +
-            " ORDER BY tk_create_time ASC")
+            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
     @Select("SELECT IFNULL(sum(pub_share_pre_fee),0) as num," +
             "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
             " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d') " +
-            " ORDER BY tk_create_time ASC")
+            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_tb set tk_status = 13" +

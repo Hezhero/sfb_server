@@ -67,20 +67,20 @@ public interface MailvorVipOrderMapper extends CoreMapper<MailvorVipOrder> {
     @Select("SELECT IFNULL(sum(total_cost),0) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_vip where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(order_sn) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_vip where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
     @Select("SELECT IFNULL(sum(commission),0) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_vip where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_vip set order_sub_status_name = '已失效'" +

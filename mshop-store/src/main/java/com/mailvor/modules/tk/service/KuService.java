@@ -152,7 +152,8 @@ public class KuService {
         String jsonStr = jsonObject.toJSONString();
         log.info("提交的JSOn字符串:"+jsonStr);
         TkParseCodeVO codeVO = JSON.parseObject(convertUnicodeToCh(HttpUtil.post(KU_API_V3, jsonStr.toString())), TkParseCodeVO.class);
-        if(codeVO.getCode() == 200) {
+        // 好单库官方约定 code=1 或 200 均为成功（原实现只认 200，会把 code=1 误判为失败）
+        if(codeVO.getCode() == 200 || codeVO.getCode() == 1) {
             codeVO.setCode(0);
             //京东goodsId为空，需要使用skuId替换
             TkParseVO parseVO = codeVO.getData();
@@ -546,6 +547,7 @@ public class KuService {
                 "https://api.cmspro.haodanku.com/duohaodan/index/category?type=9&cid=" + getKuCid(), String.class);
         JSONObject body = JSON.parseObject(response.getBody());
         if (body == null || (!Integer.valueOf(0).equals(body.getInteger("code")) &&
+                !Integer.valueOf(1).equals(body.getInteger("code")) &&
                 !Integer.valueOf(200).equals(body.getInteger("code")))) {
             throw new IllegalStateException(body == null ? "抖音分类查询失败" : body.getString("msg"));
         }

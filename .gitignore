@@ -9,3 +9,7 @@ logs
 *.DS_Store
 mshop-app/src/main/resources/config/
 mshop-admin/src/main/resources/config/
+
+# Agent skills 本地 issue/规格草案（见 docs/agents/issue-tracker.md）
+.scratch/
+

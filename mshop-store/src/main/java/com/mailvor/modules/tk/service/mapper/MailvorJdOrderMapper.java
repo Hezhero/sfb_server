@@ -66,20 +66,20 @@ public interface MailvorJdOrderMapper extends CoreMapper<MailvorJdOrder> {
     @Select("SELECT IFNULL(sum(estimate_cos_price),0) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_jd where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(id) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_jd where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
     @Select("SELECT IFNULL(sum(estimate_fee),0) as num," +
             "DATE_FORMAT(order_time, '%m-%d') as time " +
             " FROM mw_order_jd where is_del=0 and inner_type=0 and order_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d') " +
-            " ORDER BY order_time ASC")
+            " GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d'), DATE_FORMAT(order_time, '%m-%d') " +
+            " ORDER BY DATE_FORMAT(order_time, '%Y-%m-%d') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_jd set valid_code = 3" +
