@@ -49,6 +49,13 @@ public class MailvorTbLiveOrder {
 
     /** 转成淘宝订单，复用现有落库/分佣/冲正链路 */
     public MailvorTbOrder convert() {
+        Date created = parseDate(paidTime);
+        // tk_create_time 必须非空：提现（totalCash/selectCashOrderId/updateCash）与收益曲线
+        // （chartList）全部按该列过滤，为空会让订单静默消失在提现之外。
+        // 上游未给付款时间时用当前时间兜底——宁可时间略偏，也不能丢单。
+        if (created == null) {
+            created = new Date();
+        }
         MailvorTbOrder order = MailvorTbOrder.builder()
                 .tradeParentId(parseLong(tradeParentId))
                 .tradeId(tradeId)
@@ -57,7 +64,8 @@ public class MailvorTbLiveOrder {
                 .itemId(itemId)
                 .payPrice(payPrice == null ? null : String.valueOf(payPrice))
                 .pubSharePreFee(actualMoney != null ? actualMoney : predictMoney)
-                .tkPaidTime(parseDate(paidTime))
+                .tkPaidTime(created)
+                .tkCreateTime(created)
                 .tkTotalRate(commissionRate())
                 .tkStatus(orderStatus)
                 .build();

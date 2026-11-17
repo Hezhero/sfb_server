@@ -14,10 +14,15 @@
 -- 会员过期等等会静默失效，且不会有任何报错，只在业务上表现为"一条订单都不回流"。
 --
 -- 【任务类清单说明】
--- mshop-admin/src/main/java/com/mailvor/modules/quartz/task/ 下共 31 个 .java，
+-- mshop-admin/src/main/java/com/mailvor/modules/quartz/task/ 下共 39 个 .java，
 -- 但其中 OrderTask 是**基类**（只提供 saveTb/saveJd/savePdd 等落库方法，
--- 没有 run 方法，不能注册成任务）。所以可注册任务是 **30 个**。
--- 本脚本录入 30 条。
+-- 没有 run 方法，不能注册成任务）。所以可注册任务是 **38 个**。
+-- 本脚本录入 38 条。
+--
+-- 【2026-11-17 修订】
+-- 初版只录了 30 条（对应当时的任务类）。工单 04/05/06/07/08 之后新增的
+-- 8 个采集任务漏登记，部署后会静默不执行。本次补录至 38 条，
+-- 并新增一条「任务类 vs 种子」的对账测试防止复发。
 --
 -- 【幂等】
 -- 先按 bean_name 定向 DELETE，再 INSERT，且每条记录使用**固定显式 id**。
@@ -77,7 +82,16 @@ WHERE `bean_name` IN (
   'billUnlockTask',
   'memberExpiredTask',
   'payResetTask',
-  'visitsTask'
+  'visitsTask',
+  -- 2026-11-17 补录：工单 04/05/06/07/08 新增的采集任务（此前漏登记）
+  'ksOrderCollectionTask',
+  'ksOrderHistoryCollectionTask',
+  'idleOrderCollectionTask',
+  'tbLiveOrderCollectionTask',
+  'foulOrderCollectionTask',
+  'dtkGoodsNewestTask',
+  'dtkGoodsPullTask',
+  'dtkGoodsStaleTask'
 );
 
 
@@ -155,13 +169,32 @@ VALUES
 -- ===== 五、用户 / 运营：3 个 =====
 (1401, 'memberExpiredTask', 'run', '{}', '0 0 0 * * ?',  0, '会员过期处理',     '运营：每天 00:00 扫描并处理会员过期', NOW(), NOW(), 0),
 (1402, 'payResetTask',      'run', '{}', '0 0 0 1 * ?',  0, '支付通道额度重置', '运营：每月 1 日 00:00 重置支付通道额度', NOW(), NOW(), 0),
-(1403, 'visitsTask',        'run', NULL, '0 0 0 * * ?',  0, '站点访问统计',     '运营：每天 00:00 写入当日访问统计基线（无参任务，params 必须为 NULL）', NOW(), NOW(), 0);
+(1403, 'visitsTask',        'run', NULL, '0 0 0 * * ?',  0, '站点访问统计',     '运营：每天 00:00 写入当日访问统计基线（无参任务，params 必须为 NULL）', NOW(), NOW(), 0),
+
+-- ===== 六、2026-11-17 补录：工单 04/05/06/07/08 新增的采集任务 =====
+-- 【为什么补录】本脚本初版对应工单 02，只登记了当时的 30 个任务。
+-- 之后工单 04（违规订单）、05（商品库同步三件套）、06（快手）、07（闲鱼）、
+-- 08（淘宝更高佣）陆续新增了 8 个任务类，但都没补进种子 —— 部署后它们
+-- 不会执行，也不会报错，表现为「新平台的订单一条都不回流」。
+-- 代码里无 @Scheduled，任务类存在 ≠ 任务会跑；这张表才是执行源。
+--
+-- 【cron 与窗口的对应关系】
+-- 实时采集类：每 10 分钟，代码内默认窗口也是 10 分钟，首尾相接不重复不遗漏。
+-- 历史回溯类：每天凌晨错峰，单次窗口由代码内部分段（快手为 1 天/段）。
+(1404, 'ksOrderCollectionTask',        'run', '{"minutes":10}', '0 3/10 * * * ?', 0, '快手订单采集',        '实时采集：好单库快手订单，每 10 分钟拉取最近 10 分钟增量', NOW(), NOW(), 0),
+(1405, 'ksOrderHistoryCollectionTask', 'run', '{"day":30}',     '0 30 5 * * ?',   0, '快手订单历史回溯',    '历史回溯：每天 05:30 回溯最近 30 天快手订单，代码内按 1 天分段', NOW(), NOW(), 0),
+(1406, 'idleOrderCollectionTask',      'run', '{"minutes":10}', '0 5/10 * * * ?', 0, '闲鱼订单采集',        '实时采集：好单库闲鱼订单，每 10 分钟拉取最近 10 分钟增量', NOW(), NOW(), 0),
+(1407, 'tbLiveOrderCollectionTask',    'run', '{"minutes":10}', '0 7/10 * * * ?', 0, '淘宝更高佣订单采集',  '实时采集：好单库淘宝更高佣订单，每 10 分钟拉取最近 10 分钟增量', NOW(), NOW(), 0),
+(1408, 'foulOrderCollectionTask',      'run', '{"day":30}',     '0 15 6 * * ?',   0, '违规订单采集',        '合规：每天 06:15 拉取最近 30 天违规订单并标记不可结算（官方查询跨度上限 30 天）', NOW(), NOW(), 0),
+(1409, 'dtkGoodsNewestTask',           'run', '{"pageSize":100}', '0 20 1 * * ?', 0, '商品增量更新',        '商品库：每天 01:20 拉取新增/变更商品（scroll_id 分页）', NOW(), NOW(), 0),
+(1410, 'dtkGoodsPullTask',             'run', '{"pageSize":100}', '0 40 2 * * ?', 0, '商品定时拉取',        '商品库：每天 02:40 按时间窗批量拉取商品', NOW(), NOW(), 0),
+(1411, 'dtkGoodsStaleTask',            'run', '{"pageSize":100}', '0 0 1,13 * * ?', 0, '失效商品检测',      '商品库：每天 01:00 与 13:00 各一次（官方查询窗口仅 24 小时，必须每日至少跑一次）', NOW(), NOW(), 0);
 
 
 -- ============================================================================
 -- 步骤 3：验证（执行完请跑这几条，结果应全部符合注释里的期望）
 -- ============================================================================
--- ① 总数应为 30，且 is_pause 全为 0
+-- ① 总数应为 38，且 is_pause 全为 0
 SELECT COUNT(*) AS total, SUM(`is_pause` = 0) AS enabled
 FROM `system_quartz_job`
 WHERE `bean_name` IN (
@@ -170,11 +203,14 @@ WHERE `bean_name` IN (
   'csjEcomOrderCollectionTask','tbOrderHistoryCollectionTask','jdOrderHistoryCollectionTask',
   'pddOrderHistoryCollectionTask','vipOrderHistoryCollectionTask','dyOrderHistoryCollectionTask',
   'dyKuOrderHistoryCollectionTask','eleKuOrderHistoryCollectionTask','orderMtCPSHistoryCollectionTask',
+  'ksOrderCollectionTask','ksOrderHistoryCollectionTask','idleOrderCollectionTask',
+  'tbLiveOrderCollectionTask','foulOrderCollectionTask',
+  'dtkGoodsNewestTask','dtkGoodsPullTask','dtkGoodsStaleTask',
   'fee7DayTask','feeMonthTask','feeProMonthTask','feeTodayTask','feeTotalTask','feeTriggerTask',
   'orderRefundTask','orderCheckTask','selfOrderHbTask','billUnlockTask',
   'memberExpiredTask','payResetTask','visitsTask'
 );
--- 期望：total=30  enabled=30
+-- 期望：total=38  enabled=38
 
 -- ② 不应有重复 bean_name（幂等的验收条件）
 SELECT `bean_name`, COUNT(*) AS c
@@ -186,7 +222,7 @@ HAVING c > 1;
 -- ③ 逐个核对参数与 cron
 SELECT `id`, `bean_name`, `method_name`, `params`, `cron_expression`, `is_pause`, `job_name`
 FROM `system_quartz_job`
-WHERE `id` BETWEEN 1001 AND 1403
+WHERE `id` BETWEEN 1001 AND 1411
 ORDER BY `id`;
 
 

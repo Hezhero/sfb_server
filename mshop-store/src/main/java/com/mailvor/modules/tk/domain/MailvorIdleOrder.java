@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
  * 好单库闲鱼订单原始行（idle_order_list）。
  *
@@ -48,6 +50,11 @@ public class MailvorIdleOrder {
     private String channelCode;
 
     public MailvorTbOrder convert() {
+        Date created = parseDate(paidTime);
+        // tk_create_time 必须非空：提现与收益曲线按该列过滤，为空会让闲鱼订单静默消失。
+        if (created == null) {
+            created = new Date();
+        }
         MailvorTbOrder order = MailvorTbOrder.builder()
                 .tradeParentId(parseLong(tradeParentId))
                 .tradeId(tradeId)
@@ -56,7 +63,8 @@ public class MailvorIdleOrder {
                 .itemId(itemId)
                 .payPrice(payPrice == null ? null : String.valueOf(payPrice))
                 .pubSharePreFee(actualMoney != null ? actualMoney : predictMoney)
-                .tkPaidTime(parseDate(paidTime))
+                .tkPaidTime(created)
+                .tkCreateTime(created)
                 .tkTotalRate(commissionRate())
                 .build();
         if (channelCode != null && channelCode.chars().allMatch(Character::isDigit)) {
@@ -80,9 +88,9 @@ public class MailvorIdleOrder {
         try { return Long.valueOf(s.trim()); } catch (NumberFormatException e) { return null; }
     }
 
-    private static java.util.Date parseDate(String s) {
+    private static Date parseDate(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return new java.util.Date(Long.parseLong(s.trim()) * 1000L); }
+        try { return new Date(Long.parseLong(s.trim()) * 1000L); }
         catch (NumberFormatException e) { return null; }
     }
 }
