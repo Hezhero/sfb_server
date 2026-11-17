@@ -80,7 +80,20 @@ curl -sS -m 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
 
 ---
 
-## 5. 接手子代理半成品
+## 5. 多个子代理并行时的 Maven 竞态
+
+**事实**：多个子代理在同一工作区同时跑 Maven，会共享并互相清理 `target/classes`，
+产生 `NoSuchFileException`、class 缺失等假编译错误（`mshop-common`、`mshop-log`、`mshop-tool`
+随机中招）。这与源码无关，重试也无法稳定通过。
+
+**规则**：
+
+- 多个子代理并行开发时，**只有主代理跑 Maven**。子代理只写代码与单元测试，
+  写完用精确路径提交，不跑 `mvn test` / `mvn test-compile`。
+- 所有子代理提交完成后，主代理串行跑一次全量测试，统一验证并修复。
+- 这条优先于本文第 1 节的「跑测试命令」——那节是给单代理或主代理用的。
+
+## 6. 接手子代理半成品
 
 子代理可能中途失败，留下半成品。**不要直接 `git checkout .` / `git reset --hard`**。
 
