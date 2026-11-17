@@ -234,6 +234,8 @@ public class DataokeService {
     }
 
     protected String getData(String url, String version, TreeMap<String, Object> paraMap) {
+        // 配置缺失时在发请求前就抛业务异常，避免空 key 签名/发请求或 JSON.parseObject 抛 JSONException
+        config.requireConfigured();
         return DataokeApiClient.sendReq(
                 url,
                 config.getKey(),
