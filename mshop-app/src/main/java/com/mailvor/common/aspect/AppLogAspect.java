@@ -77,7 +77,8 @@ public class AppLogAspect {
         currentTime.remove();
         log.setExceptionDetail(ThrowableUtil.getStackTrace(e).getBytes());
         HttpServletRequest request = RequestHolder.getHttpServletRequest();
-        logService.save(getUsername(),
+        // @AppLog 注解的方法必须走 saveApp，不能用 save（save 读取 @Log 注解会返回 null 并触发 NPE）
+        logService.saveApp(getUsername(),
                 StringUtils.getIp(RequestHolder.getHttpServletRequest()),
                 (ProceedingJoinPoint)joinPoint, log,getUid());
     }

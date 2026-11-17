@@ -170,12 +170,12 @@ public class LogServiceImpl extends BaseServiceImpl<LogMapper, com.mailvor.modul
                 params.append(" ").append(argNames[i]).append(": ").append(argValues[i]);
             }
         }
-        // 描述
+        // 描述与类型：aopLog 为空时降级，避免 NPE 淹没原始业务异常
         if (log != null) {
-            log.setDescription(aopLog.value());
+            log.setDescription(aopLog == null ? "" : aopLog.value());
+            //类型 0-后台 1-前台
+            log.setType(aopLog == null ? 0 : aopLog.type());
         }
-        //类型 0-后台 1-前台
-        log.setType(aopLog.type());
         if(uid != null) {
             log.setUid(uid);
         }
