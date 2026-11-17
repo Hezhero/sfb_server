@@ -20,7 +20,10 @@ public class TkConstants {
 
     public static final String NINE_CATE = CMS_API_PREFIX + "/page-goods-nine-cate";
     public static final String NINE_TOP = CMS_API_PREFIX + "/page-goods-nine-top";
-    public static final String NINE_LIST = CMS_API_PREFIX + "/page-goods-nine?aid=0&cid=%s&pageNo=%s&pageSize=%s&app_key=aqoadw";
+    // 第三方app_key原为硬编码（aqoadw），改为运行时从配置注入；通过 setter 设置，
+    // 未设置时为空串，相关端点会明确失败而不是带着源码里的硬编码值静默工作。
+    public static volatile String thirdPartyAppKey = "";
+    public static final String NINE_LIST_TPL = CMS_API_PREFIX + "/page-goods-nine?aid=0&cid=%s&pageNo=%s&pageSize=%s&app_key=%s";
     public static final String HOME_DATA_TOP_CATE = "cache:home:top:cate";
     public static final String HOME_DATA_BRAND_LIST = "cache:home:brandList";
     // 首页卡片字段精简后启用新缓存，避免命中已有的完整商品响应。

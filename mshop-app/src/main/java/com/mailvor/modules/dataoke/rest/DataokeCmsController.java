@@ -10,6 +10,7 @@ import com.mailvor.modules.tk.service.DataokeService;
 import com.mailvor.modules.tk.util.SignMD5Util;
 import com.mailvor.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,6 +39,14 @@ public class DataokeCmsController {
 
     @Resource
     private DataokeService dataokeService;
+
+    // 旧版 CMS 接口的 appKey/sign 原为硬编码凭据，改为配置注入；默认空串。
+    @Value("${dataoke.cms.legacy-app-key:}")
+    private String legacyAppKey;
+    @Value("${dataoke.cms.legacy-sign:}")
+    private String legacySign;
+    @Value("${dataoke.cms.third-party-app-key:}")
+    private String thirdPartyAppKey;
 
     @GetMapping(value = "/brand/list")
     public Object brandList() {
@@ -173,8 +182,8 @@ public class DataokeCmsController {
         //https://openapi.dataoke.com/api/etc/search/list-hot-words
         return restTemplate
                 .getForObject(
-                        String.format("%s/etc/search/list-hot-words?version=v1.0.0&appKey=612bcfe884763&sign=8beae01e0da745fc62fcc954fafa2944",
-                        API_PREFIX), JSONObject.class);
+                        String.format("%s/etc/search/list-hot-words?version=v1.0.0&appKey=%s&sign=%s",
+                        API_PREFIX, legacyAppKey, legacySign), JSONObject.class);
     }
     @GetMapping(value = "/ranking/cate")
     public JSONObject rankingCate() {
@@ -251,7 +260,7 @@ public class DataokeCmsController {
         return restTemplate
                 .getForObject(String.format(
                         "%s/delanys/brand/get-goods-list?version=v1.0.0&pageId=%s&pageSize=%s&brandId=%s&appKey=%s",
-                        API_PREFIX, pageId, pageSize, brandId, "612bcfe884763"), JSONObject.class);
+                        API_PREFIX, pageId, pageSize, brandId, legacyAppKey), JSONObject.class);
     }
     @GetMapping(value = "/nine/cate")
     public JSONObject nineCate() {
@@ -267,7 +276,7 @@ public class DataokeCmsController {
     @GetMapping(value = "/nine/list")
     public JSONObject nineList(Integer pageId, Integer pageSize, String cid) {
         return restTemplate
-                .getForObject(String.format(NINE_LIST,
-                        cid, pageId, pageSize), JSONObject.class);
+                .getForObject(String.format(NINE_LIST_TPL,
+                        cid, pageId, pageSize, thirdPartyAppKey), JSONObject.class);
     }
 }

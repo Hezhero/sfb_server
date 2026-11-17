@@ -48,16 +48,18 @@ public class HaodankuController {
     public static final String PPD_CMS_PREFIX= API_CMS_PREFIX + "/duohaodan";
 
     public static final String PDD_WORD = "http://v2.api.haodanku.com/get_pdditems_link";
-    public static final String PDD_NAV = PPD_CMS_PREFIX + "/index/index?type=1&cid=XDgQx14e";
-    public static final String PDD_CATE = PPD_CMS_PREFIX + "/index/category?type=1&cid=XDgQx14e";
-    public static final String PDD_LIST = PPD_CMS_PREFIX + "/pddItem/lists?cat_id=%s&min_id=%s&cid=XDgQx14e";
+    // 发布者标识（cid/code）原为硬编码凭据，现改为配置注入；默认空串，运维需在 yml 中填真实值。
+    // 注意：这些值属于上游账号凭据，绝不写回源码。详见 docs/agents/working-conventions.md。
+    public static final String PDD_NAV_TPL = PPD_CMS_PREFIX + "/index/index?type=1&cid=%s";
+    public static final String PDD_CATE_TPL = PPD_CMS_PREFIX + "/index/category?type=1&cid=%s";
+    public static final String PDD_LIST_TPL = PPD_CMS_PREFIX + "/pddItem/lists?cat_id=%s&min_id=%s&cid=%s";
     public static final String DY_NAV = PPD_CMS_PREFIX + "/index/index?type=9&cid=";
     public static final String DY_CATE = PPD_CMS_PREFIX + "/index/category?type=9&cid=";
     public static final String DY_LIST = API_CMS_PREFIX + "/douyin/item/getListsByDy?page=%s&page_size=%s&cate_id=%s&is_get_similar=0&search_type=%s&sort_type=1&cos_fee_min=1&cid=";
-    public static final String PICK_CATE = "http://v2.api.haodanku.com/activity_category?code=zFxBnq&version=2.0.1";
-    public static final String PICK_LIST = "http://v2.api.haodanku.com/activity_items?cat_id=%s&min_id=%s&cs=1&code=zFxBnq";
+    public static final String PICK_CATE_TPL = "http://v2.api.haodanku.com/activity_category?code=%s&version=2.0.1";
+    public static final String PICK_LIST_TPL = "http://v2.api.haodanku.com/activity_items?cat_id=%s&min_id=%s&cs=1&code=%s";
     //小样种草机
-    public static final String MINI_LIST = "http://v2.api.haodanku.com/makeup_items?code=9HxUb0&keyword=%s&min_id=%s&back=10";
+    public static final String MINI_LIST_TPL = "http://v2.api.haodanku.com/makeup_items?code=%s&keyword=%s&min_id=%s&back=10";
 
     //首页banner
     public static final String BANNER_LIST = API_CMS_PREFIX + "/index/index?cid=";
@@ -76,6 +78,16 @@ public class HaodankuController {
 
     @Value("${haodanku.key}")
     private String key;
+
+    // 上游发布者标识，从配置注入。默认值留空——未配置时相关端点会因缺参失败，
+    // 而不是带着源码里的硬编码真值静默工作。
+    @Value("${haodanku.cms.pdd-cid:}")
+    private String pddCid;
+    @Value("${haodanku.cms.pick-code:}")
+    private String pickCode;
+    @Value("${haodanku.cms.mini-code:}")
+    private String miniCode;
+
     @Resource
     private PddConfig pddConfig;
 
@@ -121,17 +133,17 @@ public class HaodankuController {
     @GetMapping(value = "/pdd/nav")
     public JSONObject pddNav() {
         return restTemplate
-                .getForObject(PDD_NAV, JSONObject.class);
+                .getForObject(String.format(PDD_NAV_TPL, pddCid), JSONObject.class);
     }
     @GetMapping(value = "/pdd/cate")
     public JSONObject pddCate() {
         return restTemplate
-                .getForObject(PDD_CATE, JSONObject.class);
+                .getForObject(String.format(PDD_CATE_TPL, pddCid), JSONObject.class);
     }
     @GetMapping(value = "/pdd/list")
     public JSONObject pddList(Integer cateId, Integer pageId) {
         return restTemplate
-                .getForObject(String.format(PDD_LIST, cateId, pageId), JSONObject.class);
+                .getForObject(String.format(PDD_LIST_TPL, cateId, pageId, pddCid), JSONObject.class);
     }
 
     @GetMapping(value = "/dy/nav")
@@ -158,21 +170,21 @@ public class HaodankuController {
     @GetMapping(value = "/pick/cate")
     public JSONObject pickCate() {
         return restTemplate
-                .getForObject(PICK_CATE, JSONObject.class);
+                .getForObject(String.format(PICK_CATE_TPL, pickCode), JSONObject.class);
     }
 
     @GetMapping(value = "/pick/list")
     public JSONObject pickList(Integer cateId, Integer pageId) {
         return restTemplate
-                .getForObject(String.format(PICK_LIST,
-                        cateId, pageId), JSONObject.class);
+                .getForObject(String.format(PICK_LIST_TPL,
+                        cateId, pageId, pickCode), JSONObject.class);
     }
 
     @GetMapping(value = "/mini/list")
     public JSONObject miniList(String keyword, Integer pageId) {
         return restTemplate
-                .getForObject(String.format(MINI_LIST,
-                        keyword, pageId), JSONObject.class);
+                .getForObject(String.format(MINI_LIST_TPL,
+                        miniCode, keyword, pageId), JSONObject.class);
     }
 
     @GetMapping(value = "/banner")

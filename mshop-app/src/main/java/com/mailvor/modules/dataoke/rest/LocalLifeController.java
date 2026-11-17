@@ -61,6 +61,7 @@ public class LocalLifeController {
     }
 
     @ApiOperation(value = "本地生活订单采集")
+    @UserCheck
     @GetMapping(value = "/locallife/order")
     public JSONObject localLifeOrder(@RequestParam(required = false, defaultValue = "1") Integer page,
                                      @RequestParam(required = false, defaultValue = "100") Integer size,
