@@ -5,6 +5,7 @@ import com.mailvor.api.MshopException;
 import com.mailvor.enums.BillDetailEnum;
 import com.mailvor.modules.csj.config.CsjConfig;
 import com.mailvor.modules.csj.domain.MwCsjRewardLog;
+import com.mailvor.modules.csj.service.CsjRewardMonitor;
 import com.mailvor.modules.csj.service.CsjS2sService;
 import com.mailvor.modules.csj.service.MwCsjRewardService;
 import com.mailvor.modules.csj.service.mapper.MwCsjRewardLogMapper;
@@ -56,6 +57,10 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
      */
     @Autowired(required = false)
     private CsjS2sService s2sService;
+
+    /** 积分发放监控（可选依赖，测试中不注入时跳过） */
+    @Autowired(required = false)
+    private CsjRewardMonitor rewardMonitor;
 
     /**
      * 4 参数构造：与工单 09 的既有单测保持兼容。
@@ -182,6 +187,10 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
 
         if (s2sEnabled) {
             s2sService.markConsumed(txId);
+        }
+
+        if (rewardMonitor != null) {
+            rewardMonitor.record(integral);
         }
 
         log.info("穿山甲奖励发放 uid={} tx={} integral={} balance={}", uid, txId, integral, balance);

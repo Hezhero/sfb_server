@@ -130,12 +130,19 @@ public class DataokeApiClient {
         return value == null || value.trim().isEmpty();
     }
 
+    /**
+     * 本地调试入口：从命令行参数 / 环境变量读取凭据，不在源码中硬编码。
+     * 用法：main <appKey> <appSecret>，或先 export DATAOKE_KEY / DATAOKE_SECRET。
+     */
     public static void main(String[] args) {
-
         String url = GOODS_SEARCH.getUrl();//热力主播推荐
 
-        String appKey = "5d8d";
-        String appSecret = "f4ff27cee4";
+        String appKey = args != null && args.length > 0 ? args[0] : System.getenv("DATAOKE_KEY");
+        String appSecret = args != null && args.length > 1 ? args[1] : System.getenv("DATAOKE_SECRET");
+        if (isBlank(appKey) || isBlank(appSecret)) {
+            System.err.println("请提供大淘客凭据：main <appKey> <appSecret> 或设置 DATAOKE_KEY / DATAOKE_SECRET 环境变量");
+            return;
+        }
         TreeMap<String, Object> paraMap = new TreeMap<>();
         paraMap.put("version", "v2.1.2");
         paraMap.put("appKey", appKey);

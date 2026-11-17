@@ -7,6 +7,7 @@ import com.mailvor.common.bean.LocalUser;
 import com.mailvor.common.interceptor.AuthCheck;
 import com.mailvor.common.util.IpUtil;
 import com.mailvor.modules.csj.rest.param.CsjRewardParam;
+import com.mailvor.modules.csj.service.CsjRewardMonitor;
 import com.mailvor.modules.csj.service.MwCsjRewardService;
 import com.mailvor.modules.user.domain.MwUser;
 import io.swagger.annotations.Api;
@@ -40,6 +41,7 @@ import java.util.Map;
 public class CsjController {
 
     private final MwCsjRewardService csjRewardService;
+    private final CsjRewardMonitor rewardMonitor;
 
     /**
      * 广告配置（匿名可访问，不含任何密钥）
@@ -65,5 +67,15 @@ public class CsjController {
         Map<String, Object> result = csjRewardService.reward(
                 user.getUid(), param.getTransactionId(), param.getPosId(), IpUtil.getRequestIp());
         return ApiResult.ok(result);
+    }
+
+    /**
+     * 积分发放监控快照（需登录）。运维据此观察当日发放总量与是否触发异常告警。
+     */
+    @AuthCheck
+    @GetMapping("/reward/monitor")
+    @ApiOperation(value = "激励视频积分发放监控", notes = "当日发放次数/积分总量/告警状态")
+    public ApiResult<Object> rewardMonitor() {
+        return ApiResult.ok(rewardMonitor.snapshot());
     }
 }

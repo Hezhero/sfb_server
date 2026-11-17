@@ -344,10 +344,19 @@ public class HaodankuController {
      * 不向上游暴露原始错误码（工单 06 验收项）。
      */
     private void requireKsSuccess(Integer code, String message, String fallback) {
+        requireSuccess(code, message, "快手", fallback);
+    }
+
+    /**
+     * 好单库接口统一成功码校验：官方约定 code=1 或 200 成功，其余翻译成中文提示，
+     * 不向前端暴露上游原始错误码（工单 06/07/08 验收项）。
+     *
+     * @param prefix 中文业务前缀（如"快手"/"闲鱼"/"淘宝更高佣"），便于用户辨认来源
+     */
+    private void requireSuccess(Integer code, String message, String prefix, String fallback) {
         if (code == null || (!Integer.valueOf(1).equals(code) && !Integer.valueOf(200).equals(code))) {
-            // 中文提示固定带“快手”前缀，既不暴露上游原始错误码，也便于用户辨认来源。
             String detail = (message == null || message.trim().isEmpty()) ? fallback : message;
-            throw new IllegalStateException(detail.startsWith("快手") ? detail : "快手" + detail);
+            throw new IllegalStateException(detail.startsWith(prefix) ? detail : prefix + detail);
         }
     }
 
@@ -474,7 +483,9 @@ public class HaodankuController {
     /** 查商品高佣版本；promotion_id 用于后续高佣转链 */
     @GetMapping(value = "/tb/live/goods/query")
     public Object tbLiveGoodsQuery(@RequestParam String objectId) {
-        return kuService.tbLiveGoodsQuery(objectId);
+        TbLiveGoodsVo result = kuService.tbLiveGoodsQuery(objectId);
+        requireSuccess(result.getCode(), result.getMsg(), "淘宝更高佣", "商品查询失败，请稍后重试");
+        return result;
     }
 
     /** 高佣转链；需登录，channel 用推客 uid 归因 */
@@ -484,13 +495,17 @@ public class HaodankuController {
                              @RequestParam(required = false) Integer linkType) {
         MwUser user = LocalUser.getUser();
         String channel = user == null ? null : String.valueOf(user.getUid());
-        return kuService.tbLiveLink(promotionId, linkType, channel);
+        TbLiveLinkVo result = kuService.tbLiveLink(promotionId, linkType, channel);
+        requireSuccess(result.getCode(), result.getMsg(), "淘宝更高佣", "转链失败，请稍后重试");
+        return result;
     }
 
     /** 高佣订单拉取（内部/定时任务用，Unix 秒参数） */
     @GetMapping(value = "/tb/live/order/list")
     public Object tbLiveOrderList(QueryTbLiveOrderParam param) {
-        return kuService.tbLiveOrderList(param);
+        TbLiveOrderResVo result = kuService.tbLiveOrderList(param);
+        requireSuccess(result.getCode(), result.getMsg(), "淘宝更高佣", "订单查询失败，请稍后重试");
+        return result;
     }
 
     // ---------------- 闲鱼链路（好单库普通接口） ----------------
@@ -498,21 +513,27 @@ public class HaodankuController {
     @GetMapping(value = "/idle/goods/list")
     public Object idleGoodsList(@RequestParam(required = false) String keyword,
                                 @RequestParam(required = false) Integer minId) {
-        return kuService.idleGoodsList(keyword, minId);
+        IdleGoodsVo result = kuService.idleGoodsList(keyword, minId);
+        requireSuccess(result.getCode(), result.getMsg(), "闲鱼", "商品查询失败，请稍后重试");
+        return result;
     }
 
     /** itemid(加密,需URL编码) 与 plainItemId(数字) 二选一 */
     @GetMapping(value = "/idle/goods/detail")
     public Object idleGoodsDetail(@RequestParam(required = false) String itemId,
                                   @RequestParam(required = false) String plainItemId) {
-        return kuService.idleGoodsDetail(itemId, plainItemId);
+        IdleGoodsVo result = kuService.idleGoodsDetail(itemId, plainItemId);
+        requireSuccess(result.getCode(), result.getMsg(), "闲鱼", "商品详情查询失败，请稍后重试");
+        return result;
     }
 
     @GetMapping(value = "/idle/recharge/list")
     public Object idleRecharge(@RequestParam(required = false) Integer type,
                                @RequestParam(required = false) Integer minId,
                                @RequestParam(required = false) Integer back) {
-        return kuService.idleRecharge(type, minId, back);
+        IdleRechargeVo result = kuService.idleRecharge(type, minId, back);
+        requireSuccess(result.getCode(), result.getMsg(), "闲鱼", "话费充值查询失败，请稍后重试");
+        return result;
     }
 
     /** 闲鱼转链：需登录，channel=uid 归因；materialType 1商品/4口令/5活动页 */
@@ -524,12 +545,16 @@ public class HaodankuController {
                            @RequestParam(required = false) String activityPageId) {
         MwUser user = LocalUser.getUser();
         String channel = user == null ? null : String.valueOf(user.getUid());
-        return kuService.idleGeneralLink(materialType, itemId, xyUrl, activityPageId, channel);
+        IdleLinkVo result = kuService.idleGeneralLink(materialType, itemId, xyUrl, activityPageId, channel);
+        requireSuccess(result.getCode(), result.getMsg(), "闲鱼", "转链失败，请稍后重试");
+        return result;
     }
 
     @GetMapping(value = "/idle/order/list")
     public Object idleOrderList(QueryIdleOrderParam param) {
-        return kuService.idleOrderList(param);
+        IdleOrderResVo result = kuService.idleOrderList(param);
+        requireSuccess(result.getCode(), result.getMsg(), "闲鱼", "订单查询失败，请稍后重试");
+        return result;
     }
 
 }
