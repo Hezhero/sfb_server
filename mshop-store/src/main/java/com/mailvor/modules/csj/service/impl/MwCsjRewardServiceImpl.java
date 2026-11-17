@@ -5,6 +5,7 @@ import com.mailvor.api.MshopException;
 import com.mailvor.enums.BillDetailEnum;
 import com.mailvor.modules.csj.config.CsjConfig;
 import com.mailvor.modules.csj.domain.MwCsjRewardLog;
+import com.mailvor.modules.csj.service.CsjS2sService;
 import com.mailvor.modules.csj.service.MwCsjRewardService;
 import com.mailvor.modules.csj.service.mapper.MwCsjRewardLogMapper;
 import com.mailvor.modules.user.domain.MwUser;
@@ -12,9 +13,12 @@ import com.mailvor.modules.user.service.MwUserBillService;
 import com.mailvor.modules.user.service.mapper.UserMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -49,6 +53,17 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
     private final MwCsjRewardLogMapper rewardLogMapper;
     private final UserMapper userMapper;
     private final MwUserBillService billService;
+
+    /**
+     * S2S 白名单校验服务。可选依赖：未配置 S2S 时为 null，走原来的三层防刷逻辑，
+     * 保证历史部署与既有单测向后兼容；配置了 S2S 后才强制两阶段校验。
+     */
+    @Resource(required = false)
+    private CsjS2sService s2sService;
+
+    /** S2S 是否强制启用（配置了 security key 才生效） */
+    @Value("${csj.s2s-security-key:}")
+    private String s2sSecurityKey;
 
     @Override
     public Map<String, Object> getClientConfig() {
@@ -126,6 +141,16 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
             throw new MshopException("奖励配置有误");
         }
 
+        // S2S 两阶段校验（第二层）：配置了 security key 时，必须先在 S2S 回调中
+        // 验签通过并落库白名单，客户端上报才允许发奖。
+        // 未配置 S2S（历史部署）时 s2sService 为 null 或 key 为空，跳过——保持向后兼容。
+        boolean s2sEnabled = s2sService != null
+                && s2sSecurityKey != null && !s2sSecurityKey.trim().isEmpty();
+        if (s2sEnabled && !s2sService.isEligible(txId, uid)) {
+            log.warn("穿山甲奖励被 S2S 白名单拒绝 uid={} tx={}", uid, txId);
+            throw new MshopException("奖励验证未通过");
+        }
+
         MwCsjRewardLog record = MwCsjRewardLog.builder()
                 .uid(uid)
                 .transactionId(txId)
@@ -151,6 +176,10 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
 
         billService.income(uid, "看广告奖励", BillDetailEnum.CATEGORY_2.getValue(),
                 BillDetailEnum.TYPE_9.getValue(), integral, balance, "穿山甲激励视频", txId);
+
+        if (s2sEnabled) {
+            s2sService.markConsumed(txId);
+        }
 
         log.info("穿山甲奖励发放 uid={} tx={} integral={} balance={}", uid, txId, integral, balance);
         return result(uid, integral, integral, todayCount + 1, true);
