@@ -1,8 +1,9 @@
 package com.mailvor.modules.quartz.task;
 
 import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.order.service.PlatformOrderRegistry;
 import com.mailvor.modules.order.service.SuStoreOrderService;
-import com.mailvor.modules.tk.domain.*;
+import com.mailvor.modules.tk.domain.TkOrder;
 import com.mailvor.modules.tk.service.*;
 import com.mailvor.utils.StringUtils;
 import lombok.Data;
@@ -33,6 +34,8 @@ public class OrderRefundTask {
 
     @Resource
     protected MailvorMtOrderService mtOrderService;
+    @Resource
+    protected MailvorEleOrderService eleOrderService;
 
     @Resource
     private SuStoreOrderService suStoreOrderService;
@@ -47,54 +50,19 @@ public class OrderRefundTask {
         } else {
             param = JSON.parseObject(paramStr, OrderRefundParam.class);
         }
-        List<MailvorTbOrder> tbOrders = orderService.getRefundAndBindOrderList(param.getPrior());
-
-        tbOrders.stream().forEach(tbOrder -> {
-            if(tbOrder.getHb() == null) {
-                return;
+        // 平台清单收在注册表里：新增/漏接一个平台只改注册表一处。
+        // 此前这里逐字段枚举 6 个 Service，Ele 全仓库没有任何一处读进退款冲正。
+        List<PlatformOrderRegistry.OrderSource> sources = PlatformOrderRegistry.refundableSources(
+                orderService, jdOrderService, pddOrderService, vipOrderService,
+                dyOrderService, mtOrderService, eleOrderService);
+        for (PlatformOrderRegistry.OrderSource source : sources) {
+            for (TkOrder order : source.findRefundable(param.getPrior())) {
+                if (order.getHb() == null) {
+                    continue;
+                }
+                source.refund(suStoreOrderService, order);
             }
-            suStoreOrderService.decHbAndRefundOrder(tbOrder.getUid(), tbOrder);
-        });
-
-        List<MailvorJdOrder> jdOrders = jdOrderService.getRefundAndBindOrderList(param.getPrior());
-        jdOrders.stream().forEach(jdOrder -> {
-            if(jdOrder.getHb() == null) {
-                return;
-            }
-            suStoreOrderService.decHbAndRefundOrder(jdOrder.getUid(), jdOrder);
-        });
-
-        List<MailvorPddOrder> pddOrders = pddOrderService.getRefundAndBindOrderList(param.getPrior());
-        pddOrders.stream().forEach(pddOrder -> {
-            if(pddOrder.getHb() == null) {
-                return;
-            }
-            suStoreOrderService.decHbAndRefundOrder(pddOrder.getUid(), pddOrder);
-        });
-
-        List<MailvorDyOrder> dyOrders = dyOrderService.getRefundAndBindOrderList(param.getPrior());
-        dyOrders.stream().forEach(dyOrder -> {
-            if(dyOrder.getHb() == null) {
-                return;
-            }
-            suStoreOrderService.decHbAndRefundOrder(dyOrder.getUid(), dyOrder);
-        });
-
-        List<MailvorVipOrder> vipOrders = vipOrderService.getRefundAndBindOrderList(param.getPrior());
-        vipOrders.stream().forEach(vipOrder -> {
-            if(vipOrder.getHb() == null) {
-                return;
-            }
-            suStoreOrderService.decHbAndRefundOrder(vipOrder.getUid(), vipOrder);
-        });
-
-        List<MailvorMtOrder> mtOrders = mtOrderService.getRefundAndBindOrderList(param.getPrior());
-        mtOrders.stream().forEach(mtOrder -> {
-            if(mtOrder.getHb() == null) {
-                return;
-            }
-            suStoreOrderService.decHbAndRefundOrder(mtOrder.getUid(), mtOrder);
-        });
+        }
     }
 
     @Data
