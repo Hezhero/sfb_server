@@ -101,6 +101,13 @@ public class KuService {
 
     public static final String COUDAN_API = "http://v2.api.haodanku.com/make_order";
 
+    // 快手（好单库普通接口，apikey 鉴权，无需申请权限）
+    public static final String KS_ITEM_LIST_API = KU_API_BASE + "/ks_item_list";
+    public static final String KS_ITEM_DETAIL_API = KU_API_BASE + "/ks_item_detail";
+    public static final String KS_ITEM_RATESURL_API = KU_API_BASE + "/ks_item_ratesurl";
+    public static final String KS_ANALYZE_CODE_API = KU_API_BASE + "/ks_analyze_code";
+    public static final String KS_ORDER_LIST_API = KU_API_BASE + "/ks_order_list";
+
 
     /**
      *  抖音本地生活分类
@@ -756,5 +763,112 @@ public class KuService {
         return listVO;
     }
 
+    // ==================== 快手全链路（工单 06）====================
 
+    /** 好单库统一成功码：官方约定 code=1 或 200 均为成功（code=0 表示失败）。 */
+    public static boolean isKsSuccess(Integer code) {
+        return Integer.valueOf(1).equals(code) || Integer.valueOf(200).equals(code);
+    }
+
+    /** 快手商品列表/搜索（GET，apikey 即可）。 */
+    public KsGoodsListVo itemList(GoodsListKsParam param) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        if (StringUtils.isNotBlank(param.getKeyword())) {
+            sb.append("&keyword=").append(urlEncode(param.getKeyword()));
+        }
+        if (param.getMinId() != null) {
+            sb.append("&min_id=").append(param.getMinId());
+        }
+        if (param.getBack() != null) {
+            sb.append("&back=").append(param.getBack());
+        }
+        if (param.getSortType() != null) {
+            sb.append("&sort_type=").append(param.getSortType());
+        }
+        if (param.getMinPrice() != null) {
+            sb.append("&min_price=").append(param.getMinPrice());
+        }
+        if (param.getMaxPrice() != null) {
+            sb.append("&max_price=").append(param.getMaxPrice());
+        }
+        if (param.getMinSale() != null) {
+            sb.append("&min_sale=").append(param.getMinSale());
+        }
+        if (param.getMaxSale() != null) {
+            sb.append("&max_sale=").append(param.getMaxSale());
+        }
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(KS_ITEM_LIST_API + "?" + sb), String.class);
+        return parseKs(re == null ? null : re.getBody(), KsGoodsListVo.class);
+    }
+
+    /** 快手商品详情（GET，apikey + product_id）。 */
+    public KsGoodsDetailVo itemDetail(String productId) {
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(KS_ITEM_DETAIL_API + "?apikey=" + key + "&product_id=" + urlEncode(productId)),
+                String.class);
+        return parseKs(re == null ? null : re.getBody(), KsGoodsDetailVo.class);
+    }
+
+    /** 快手商品转链（POST form-data，channel 为推客标识）。 */
+    public KsItemRatesUrlVo itemRatesUrl(String productId, String channel) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        sb.append("&product_id=").append(urlEncode(productId));
+        if (StringUtils.isNotBlank(channel)) {
+            sb.append("&channel=").append(urlEncode(channel));
+        }
+        return postFormKs(KS_ITEM_RATESURL_API, sb.toString(), KsItemRatesUrlVo.class);
+    }
+
+    /** 快手口令解析（POST form-data，content 为快手口令）。 */
+    public KsAnalyzeCodeVo analyzeCode(String content) {
+        String body = "apikey=" + key + "&content=" + urlEncode(content);
+        return postFormKs(KS_ANALYZE_CODE_API, body, KsAnalyzeCodeVo.class);
+    }
+
+    /**
+     * 快手订单拉取（GET，start_date/end_date 为 Unix 秒，min_id 为游标）。
+     * 成功码兼容 code=1 与 200，交给调用方以统一语义判断。
+     */
+    public KsOrderResVo orderList(QueryKsOrderParam param) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        sb.append("&min_id=").append(param.getMinId() == null ? 0 : param.getMinId());
+        sb.append("&back=").append(param.getBack() == null ? 100 : param.getBack());
+        sb.append("&start_date=").append(param.getStart() == null ? 0L : param.getStart());
+        sb.append("&end_date=").append(param.getEnd() == null ? 0L : param.getEnd());
+        sb.append("&date_type=").append(param.getDateType() == null ? 1 : param.getDateType());
+        sb.append("&state=").append(param.getState() == null ? 0 : param.getState());
+        ResponseEntity<String> re = restTemplate.getForEntity(KS_ORDER_LIST_API + "?" + sb, String.class);
+        return parseKs(re == null ? null : re.getBody(), KsOrderResVo.class);
+    }
+
+    private <T> T postFormKs(String url, String body, Class<T> type) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        ResponseEntity<String> re = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
+        return parseKs(re == null ? null : re.getBody(), type);
+    }
+
+    private <T> T parseKs(String body, Class<T> type) {
+        if (body == null || body.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return JSON.parseObject(body, type);
+        } catch (Exception e) {
+            log.error("快手接口响应解析失败: {}", body, e);
+            throw new IllegalStateException("快手服务响应异常，请稍后重试");
+        }
+    }
+
+    private static String urlEncode(String value) {
+        try {
+            return java.net.URLEncoder.encode(value, "UTF-8");
+        } catch (Exception e) {
+            return value;
+        }
+    }
 }

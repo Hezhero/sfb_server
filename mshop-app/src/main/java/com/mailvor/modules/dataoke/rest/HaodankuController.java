@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -331,6 +332,91 @@ public class HaodankuController {
         }
         return kuService.dyProductWord(itemId, channel);
     }
+
+    // ==================== 快手全链路（工单 06）====================
+
+    /**
+     * 快手接口统一成功码校验：官方约定 code=1 或 200 成功，其余一律翻译成中文提示，
+     * 不向上游暴露原始错误码（工单 06 验收项）。
+     */
+    private void requireKsSuccess(Integer code, String message, String fallback) {
+        if (code == null || (!Integer.valueOf(1).equals(code) && !Integer.valueOf(200).equals(code))) {
+            // 中文提示固定带“快手”前缀，既不暴露上游原始错误码，也便于用户辨认来源。
+            String detail = (message == null || message.trim().isEmpty()) ? fallback : message;
+            throw new IllegalStateException(detail.startsWith("快手") ? detail : "快手" + detail);
+        }
+    }
+
+    /** 快手商品列表/搜索 */
+    @GetMapping(value = "/ks/item/list")
+    public ApiResult<KsGoodsListVo> ksItemList(GoodsListKsParam param) {
+        KsGoodsListVo result = kuService.itemList(param);
+        if (result == null) {
+            throw new IllegalStateException("快手商品服务暂不可用，请稍后重试");
+        }
+        requireKsSuccess(result.getCode(), result.getMsg(), "快手商品查询失败，请稍后重试");
+        return ApiResult.ok(result);
+    }
+
+    /** 快手商品详情 */
+    @GetMapping(value = "/ks/item/detail")
+    public ApiResult<KsGoodsDetailVo> ksItemDetail(@RequestParam String productId) {
+        KsGoodsDetailVo result = kuService.itemDetail(productId);
+        if (result == null) {
+            throw new IllegalStateException("快手商品服务暂不可用，请稍后重试");
+        }
+        requireKsSuccess(result.getCode(), result.getMsg(), "快手商品详情查询失败，请稍后重试");
+        return ApiResult.ok(result);
+    }
+
+    /**
+     * 快手商品转链：channel 带推客 uid（来自 LocalUser），用于订单归因。
+     * 未登录不可调用（@UserCheck）。
+     */
+    @UserCheck
+    @PostMapping(value = "/ks/item/ratesurl")
+    public ApiResult<KsItemRatesUrlVo.KsItemRatesUrlData> ksItemRatesUrl(@RequestParam String productId) {
+        String channel = LocalUser.getUser() == null ? "0" : LocalUser.getUser().getUid().toString();
+        KsItemRatesUrlVo result = kuService.itemRatesUrl(productId, channel);
+        if (result == null) {
+            throw new IllegalStateException("快手转链失败，请稍后重试");
+        }
+        requireKsSuccess(result.getCode(), result.getMsg(), "快手转链失败，请稍后重试");
+        KsItemRatesUrlVo.KsItemRatesUrlData data = result.getData();
+        if (data == null || ((data.getLinkCode() == null || data.getLinkCode().isEmpty())
+                && (data.getKwaiUrl() == null || data.getKwaiUrl().isEmpty())
+                && (data.getLinkUrl() == null || data.getLinkUrl().isEmpty()))) {
+            throw new IllegalStateException("快手转链失败，请稍后重试");
+        }
+        return ApiResult.ok(data);
+    }
+
+    /** 快手口令解析 */
+    @PostMapping(value = "/ks/analyze/code")
+    public ApiResult<KsAnalyzeCodeVo.KsAnalyzeCodeData> ksAnalyzeCode(@RequestParam String content) {
+        KsAnalyzeCodeVo result = kuService.analyzeCode(content);
+        if (result == null) {
+            throw new IllegalStateException("快手口令解析失败，请稍后重试");
+        }
+        requireKsSuccess(result.getCode(), result.getMsg(), "快手口令解析失败，请稍后重试");
+        KsAnalyzeCodeVo.KsAnalyzeCodeData data = result.getData();
+        if (data == null || data.getProductId() == null || data.getProductId().isEmpty()) {
+            throw new IllegalStateException("快手口令解析失败，未识别到商品");
+        }
+        return ApiResult.ok(data);
+    }
+
+    /** 快手订单查询（运营对账用途，使用 Unix 秒游标分页） */
+    @GetMapping(value = "/ks/order/list")
+    public ApiResult<KsOrderResVo> ksOrderList(QueryKsOrderParam param) {
+        KsOrderResVo result = kuService.orderList(param);
+        if (result == null) {
+            throw new IllegalStateException("快手订单服务暂不可用，请稍后重试");
+        }
+        requireKsSuccess(result.getCode(), result.getMsg(), "快手订单查询失败，请稍后重试");
+        return ApiResult.ok(result);
+    }
+
     public static void main(String[] args) {
 //        String res = "jsonpCBKB({\"retcode\":0,\"retmsg\":\"\",\"from\":\"cache\",\"def\":\n" +
 //                "[\"手机\",\"洗衣机\",\"电视\",\"冰箱\",\"笔记本\",\"手表\",\"耳机\",\"空调\",\"充电宝\",\"路由器\",\"保温杯\",\"牛奶\"], \"owner\":\n" +

@@ -516,4 +516,36 @@ public class OrderTask {
 
         return 0;
     }
+
+    /**
+     * 快手订单采集（工单 06）：参照 saveEleKu，订单复用 mw_order_dy 表。
+     *
+     * @return 下一页 min_id 游标；≤0 表示没有更多订单
+     */
+    public Integer saveKs(QueryKsOrderParam param) {
+        KsOrderResVo res;
+        try {
+            res = kuService.orderList(param);
+        } catch (Exception e) {
+            log.error("快手订单拉取失败：{}", e.getMessage());
+            return 0;
+        }
+        if (res != null && KuService.isKsSuccess(res.getCode()) && !CollectionUtils.isEmpty(res.getData())) {
+            List<MailvorDyOrder> orders = res.getData().stream()
+                    .map(MailvorKsKuOrder::convert)
+                    .collect(Collectors.toList());
+            orders.forEach(order -> {
+                // 复用现有 external_info 归因机制（773026_<uid>_0200 中间段为 uid）
+                Long uid = OrderUtil.getDyOrderUser(order.getExternalInfo());
+                if (uid != null && uid > 0) {
+                    order.setUid(uid);
+                    RedisUtil.setFeeUid(uid);
+                }
+            });
+            boolean saved = dyOrderService.saveOrUpdateBatch(orders);
+            log.debug(saved ? "快手订单保存成功" : "快手订单保存失败");
+            return res.getMinId();
+        }
+        return 0;
+    }
 }
