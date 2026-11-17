@@ -783,7 +783,8 @@ public class KuService {
 
     /** 好单库统一成功码：官方约定 code=1 或 200 均为成功（code=0 表示失败）。 */
     public static boolean isKsSuccess(Integer code) {
-        return Integer.valueOf(1).equals(code) || Integer.valueOf(200).equals(code);
+        // 成功码判定统一由 KuClient 持有，不再各写一遍
+        return KuClient.isSuccess(code);
     }
 
     /** 快手商品列表/搜索（GET，apikey 即可）。 */

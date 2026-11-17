@@ -17,6 +17,7 @@ import com.mailvor.modules.tk.param.QueryKsOrderParam;
 import com.mailvor.modules.tk.param.QueryTbLiveOrderParam;
 import com.mailvor.modules.tk.param.QueryIdleOrderParam;
 import com.mailvor.modules.tk.param.jd.GoodsListJDParam;
+import com.mailvor.modules.tk.service.KuClient;
 import com.mailvor.modules.tk.service.KuService;
 import com.mailvor.modules.tk.vo.*;
 import com.mailvor.modules.tk.vo.jd.JdKuCommonGoodsDetailDataVo;
@@ -354,7 +355,8 @@ public class HaodankuController {
      * @param prefix 中文业务前缀（如"快手"/"闲鱼"/"淘宝更高佣"），便于用户辨认来源
      */
     private void requireSuccess(Integer code, String message, String prefix, String fallback) {
-        if (code == null || (!Integer.valueOf(1).equals(code) && !Integer.valueOf(200).equals(code))) {
+        // 成功码判定统一由 KuClient 持有，Controller 不再重复定义
+        if (!KuClient.isSuccess(code)) {
             String detail = (message == null || message.trim().isEmpty()) ? fallback : message;
             throw new IllegalStateException(detail.startsWith(prefix) ? detail : prefix + detail);
         }
