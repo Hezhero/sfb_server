@@ -14,6 +14,7 @@ import com.mailvor.modules.tk.param.GoodsListDyParam;
 import com.mailvor.modules.tk.param.GoodsListKsParam;
 import com.mailvor.modules.tk.param.KuCustomParam;
 import com.mailvor.modules.tk.param.QueryKsOrderParam;
+import com.mailvor.modules.tk.param.QueryTbLiveOrderParam;
 import com.mailvor.modules.tk.param.jd.GoodsListJDParam;
 import com.mailvor.modules.tk.service.KuService;
 import com.mailvor.modules.tk.vo.*;
@@ -465,6 +466,30 @@ public class HaodankuController {
         param.setPageId(1);
         param.setPageSize(1);
         return kuService.detailJD(param);
+    }
+
+    // ---------------- 淘宝更高佣三件套（好单库普通接口） ----------------
+
+    /** 查商品高佣版本；promotion_id 用于后续高佣转链 */
+    @GetMapping(value = "/tb/live/goods/query")
+    public Object tbLiveGoodsQuery(@RequestParam String objectId) {
+        return kuService.tbLiveGoodsQuery(objectId);
+    }
+
+    /** 高佣转链；需登录，channel 用推客 uid 归因 */
+    @UserCheck
+    @PostMapping(value = "/tb/live/link")
+    public Object tbLiveLink(@RequestParam String promotionId,
+                             @RequestParam(required = false) Integer linkType) {
+        MwUser user = LocalUser.getUser();
+        String channel = user == null ? null : String.valueOf(user.getUid());
+        return kuService.tbLiveLink(promotionId, linkType, channel);
+    }
+
+    /** 高佣订单拉取（内部/定时任务用，Unix 秒参数） */
+    @GetMapping(value = "/tb/live/order/list")
+    public Object tbLiveOrderList(QueryTbLiveOrderParam param) {
+        return kuService.tbLiveOrderList(param);
     }
 
 }

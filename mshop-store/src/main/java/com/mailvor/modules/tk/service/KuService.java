@@ -18,6 +18,7 @@ import com.mailvor.modules.tk.param.ParseContentParam;
 import com.mailvor.modules.tk.param.QueryDyKuParam;
 import com.mailvor.modules.tk.param.QueryEleKuParam;
 import com.mailvor.modules.tk.param.QueryKsOrderParam;
+import com.mailvor.modules.tk.param.QueryTbLiveOrderParam;
 import com.mailvor.modules.tk.param.jd.GoodsListJDParam;
 import com.mailvor.modules.tk.service.dto.DyLifeCityDto;
 import com.mailvor.modules.tk.util.HttpUtils;
@@ -109,6 +110,11 @@ public class KuService {
     public static final String KS_ITEM_RATESURL_API = KU_API_BASE + "/ks_item_ratesurl";
     public static final String KS_ANALYZE_CODE_API = KU_API_BASE + "/ks_analyze_code";
     public static final String KS_ORDER_LIST_API = KU_API_BASE + "/ks_order_list";
+
+    // 淘宝更高佣三件套（好单库普通接口，apikey 鉴权，无需申请权限）
+    public static final String TB_LIVE_GOODS_QUERY_API = KU_API_BASE + "/tblive_goods_query";
+    public static final String TB_LIVE_LINK_API = KU_API_BASE + "/get_tblive_link";
+    public static final String TB_LIVE_ORDER_LIST_API = KU_API_BASE + "/tb_live_order_list";
 
 
     /**
@@ -852,6 +858,80 @@ public class KuService {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         ResponseEntity<String> re = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
         return parseKs(re == null ? null : re.getBody(), type);
+    }
+
+    // ---------------- 淘宝更高佣三件套（好单库普通接口） ----------------
+
+    /** 淘宝更高佣商品查询：object_id 为商品 ID */
+    public TbLiveGoodsVo tbLiveGoodsQuery(String objectId) {
+        String url = TB_LIVE_GOODS_QUERY_API + "?apikey=" + key
+                + "&object_id=" + urlEncode(objectId);
+        ResponseEntity<String> re = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+        return parseHdk(re == null ? null : re.getBody(), TbLiveGoodsVo.class, "淘宝更高佣查询");
+    }
+
+    /** 淘宝更高佣转链：promotion_id 来自高佣查询结果；linkType 1长链/2短链/3淘口令/4换端 */
+    public TbLiveLinkVo tbLiveLink(String promotionId, Integer linkType, String channel) {
+        StringBuilder body = new StringBuilder();
+        body.append("apikey=").append(key)
+                .append("&promotion_id=").append(urlEncode(promotionId))
+                .append("&link_type=").append(linkType == null ? 1 : linkType);
+        if (StringUtils.isNotBlank(channel)) {
+            body.append("&channel=").append(urlEncode(channel));
+        }
+        String response = postForm(TB_LIVE_LINK_API, body.toString());
+        return parseHdk(response, TbLiveLinkVo.class, "淘宝更高佣转链");
+    }
+
+    /** 淘宝更高佣订单拉取；startTime/endTime 为 Unix 秒 */
+    public TbLiveOrderResVo tbLiveOrderList(QueryTbLiveOrderParam param) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key)
+                .append("&min_id=").append(param.getMinId() == null ? 1 : param.getMinId())
+                .append("&back=").append(param.getBack() == null ? 100 : param.getBack());
+        if (param.getStartTime() != null) {
+            sb.append("&start_date=").append(param.getStartTime());
+        }
+        if (param.getEndTime() != null) {
+            sb.append("&end_date=").append(param.getEndTime());
+        }
+        if (param.getDateType() != null) {
+            sb.append("&date_type=").append(param.getDateType());
+        }
+        if (param.getState() != null) {
+            sb.append("&state=").append(param.getState());
+        }
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(TB_LIVE_ORDER_LIST_API + "?" + sb), String.class);
+        return parseHdk(re == null ? null : re.getBody(), TbLiveOrderResVo.class, "淘宝更高佣订单");
+    }
+
+    /** POST form-data 通用接缝（供转链类接口复用） */
+    private String postForm(String url, String formBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        ResponseEntity<String> re = restTemplate.postForEntity(
+                java.net.URI.create(url), new HttpEntity<>(formBody, headers), String.class);
+        return re == null ? null : re.getBody();
+    }
+
+    /** 好单库通用响应解析，带业务名用于中文错误提示 */
+    private <T> T parseHdk(String body, Class<T> type, String bizName) {
+        if (body == null || body.trim().isEmpty()) {
+            throw new IllegalStateException(bizName + "服务返回为空");
+        }
+        try {
+            T result = JSON.parseObject(body, type);
+            if (result == null) {
+                throw new IllegalStateException(bizName + "服务响应异常");
+            }
+            return result;
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}响应解析失败: {}", bizName, body, e);
+            throw new IllegalStateException(bizName + "服务响应异常，请稍后重试");
+        }
     }
 
     private <T> T parseKs(String body, Class<T> type) {
