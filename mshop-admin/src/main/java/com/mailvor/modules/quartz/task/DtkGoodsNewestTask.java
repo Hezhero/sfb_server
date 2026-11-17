@@ -1,6 +1,6 @@
 package com.mailvor.modules.quartz.task;
 
-import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskParams;
 import com.mailvor.modules.tk.param.GetNewestGoodsParam;
 import com.mailvor.modules.tk.service.DtkGoodsSyncService;
 import com.mailvor.utils.StringUtils;
@@ -48,15 +48,8 @@ public class DtkGoodsNewestTask {
      * 见 {@code QuartzRunnable} 的 getDeclaredMethod 分支。
      */
     public void run(String paramStr) {
-        GetNewestGoodsParam param;
-        if (StringUtils.isBlank(paramStr)) {
-            param = new GetNewestGoodsParam();
-        } else {
-            param = JSON.parseObject(paramStr, GetNewestGoodsParam.class);
-        }
-        if (param == null) {
-            param = new GetNewestGoodsParam();
-        }
+        // 统一参数解析策略：坏 JSON 抛异常（ExecutionJob 记录失败并暂停任务）
+        GetNewestGoodsParam param = TaskParams.parse(paramStr, GetNewestGoodsParam.class, "商品更新任务");
 
         Integer minutes = readMinutes(paramStr);
         if (StringUtils.isBlank(param.getStartTime()) || StringUtils.isBlank(param.getEndTime())) {
@@ -90,26 +83,12 @@ public class DtkGoodsNewestTask {
 
     /** 从原始 JSON 里取 minutes（不在 GetNewestGoodsParam 里，属于任务级调度参数） */
     private static Integer readMinutes(String paramStr) {
-        if (StringUtils.isBlank(paramStr) || !paramStr.trim().startsWith("{")) {
-            return null;
-        }
-        try {
-            return JSON.parseObject(paramStr).getInteger("minutes");
-        } catch (RuntimeException e) {
-            return null;
-        }
+        return TaskParams.parseObject(paramStr, "商品更新任务").getInteger("minutes");
     }
 
     private static int readPageSize(String paramStr, int defaultSize) {
-        if (StringUtils.isBlank(paramStr) || !paramStr.trim().startsWith("{")) {
-            return defaultSize;
-        }
-        try {
-            Integer size = JSON.parseObject(paramStr).getInteger("pageSize");
-            return com.mailvor.modules.tk.param.DtkScrollPageParam.normalizePageSize(
-                    size == null ? defaultSize : size);
-        } catch (RuntimeException e) {
-            return defaultSize;
-        }
+        Integer size = TaskParams.parseObject(paramStr, "商品更新任务").getInteger("pageSize");
+        return com.mailvor.modules.tk.param.DtkScrollPageParam.normalizePageSize(
+                size == null ? defaultSize : size);
     }
 }

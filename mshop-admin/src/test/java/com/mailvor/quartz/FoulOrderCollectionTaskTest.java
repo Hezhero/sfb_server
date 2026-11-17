@@ -69,12 +69,17 @@ public class FoulOrderCollectionTaskTest {
     }
 
     @Test
-    public void malformedJsonFallsBackToDefaultsInsteadOfCrashing() {
-        // Quartz 会把 params 原样传进来，写错一个引号不该让整轮任务消失
+    public void malformedJsonFailsLoudlyInsteadOfSilentlyUsingDefaults() {
+        // 2026-11-17 决策变更：坏 JSON 不再静默回退默认值。
+        // 理由：ExecutionJob 捕获异常后会写 quartz_log（含堆栈）并把任务暂停，
+        // 配置错误立刻可见；而静默回退会让错误配置长期潜伏、用默认值跑下去。
         try {
             task.run("{not json");
-        } catch (RuntimeException e) {
-            fail("参数解析失败不应抛出，实际：" + e);
+            fail("坏 JSON 参数必须抛异常，让 ExecutionJob 记录失败并暂停任务");
+        } catch (IllegalArgumentException e) {
+            assertNotNull("异常信息不能为空", e.getMessage());
+            assertTrue("异常信息应能定位是哪个任务配错了，实际：" + e.getMessage(),
+                    e.getMessage().contains("违规订单采集任务"));
         }
     }
 
@@ -115,9 +120,9 @@ public class FoulOrderCollectionTaskTest {
     }
 
     @Test
-    public void spanBeyondThirtyIsClampedToo() {
-        // span 在 FoulOrderService 内部还会再夹一次（双保险），这里验证任务层不会
-        // 把非法值直接透传出去造成上游参数错误。
+    public void unknownParamKeyIsIgnored() {
+        // span 参数已删除。上游传了也不会报错（未知字段被忽略），
+        // 但要确认它不会影响实际行为：day 仍按传入值生效。
         task.run("{\"day\":30,\"span\":90}");
         verify(foulOrderService).syncFoulOrdersFromDaysAgo(eq(30), any());
     }
@@ -159,9 +164,9 @@ public class FoulOrderCollectionTaskTest {
     public void paramDefaultsRespectOfficialLimits() {
         FoulOrderCollectionTask.FoulOrderParam p = new FoulOrderCollectionTask.FoulOrderParam();
         assertEquals("默认回溯 30 天（官方上限）", Integer.valueOf(30), p.getDay());
-        assertEquals("默认跨度 7 天，远低于官方上限", Integer.valueOf(7), p.getSpan());
         assertEquals("默认每页 100 条", Integer.valueOf(DataokeService.FOUL_ORDER_PAGE_SIZE), p.getPageSize());
-        assertTrue("默认值必须在官方限制内", p.getSpan() <= DataokeService.FOUL_ORDER_MAX_SPAN_DAYS);
         assertTrue("day 也必须在官方限制内", p.getDay() <= DataokeService.FOUL_ORDER_MAX_SPAN_DAYS);
+        // span 参数已删除：官方跨度上限固定 30 天，由 syncFoulOrdersFromDaysAgo 内部固定使用，
+        // 旧实现解析了 span 却从不传给下游（假参数）。
     }
 }

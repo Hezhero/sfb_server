@@ -1,9 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
-import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskParams;
 import com.mailvor.modules.tk.service.DataokeService;
 import com.mailvor.modules.tk.service.FoulOrderService;
-import com.mailvor.utils.StringUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -59,27 +58,16 @@ public class FoulOrderCollectionTask {
      * @param paramStr JSON 参数；为空或 {@code "{}"} 时用默认值
      */
     public void run(String paramStr) {
-        FoulOrderParam param;
-        if (StringUtils.isEmpty(paramStr) || "{}".equals(paramStr.trim())) {
-            param = new FoulOrderParam();
-        } else {
-            try {
-                param = JSON.parseObject(paramStr, FoulOrderParam.class);
-            } catch (Exception e) {
-                // Quartz 参数由运维手工录入，畸形 JSON 不应让整个任务失败；
-                // 回退到默认值并记录告警，便于发现配置错误。
-                log.warn("违规订单采集参数解析失败，回退默认值：{}", paramStr, e);
-                param = null;
-            }
-            if (param == null) {
-                param = new FoulOrderParam();
-            }
-        }
+        // 统一参数解析策略：坏 JSON 抛异常（ExecutionJob 记录失败并暂停任务）
+        FoulOrderParam param = TaskParams.parse(paramStr, FoulOrderParam.class, "违规订单采集任务");
+
         int day = normalize(param.getDay(), MAX_DAY, MAX_DAY);
-        int span = normalize(param.getSpan(), MAX_SPAN_DAYS, MAX_SPAN_DAYS);
         Integer pageSize = param.getPageSize();
 
-        log.info("违规订单采集开始 day={} span={} pageSize={}", day, span, pageSize);
+        // 注意：此处不再有 span 参数。官方查询跨度上限固定为 30 天，
+        // syncFoulOrdersFromDaysAgo 内部即按该上限取窗口，参数化没有意义
+        // （旧实现解析了 span 却从不传给下游，是个假参数）。
+        log.info("违规订单采集开始 day={} pageSize={}", day, pageSize);
         long start = System.currentTimeMillis();
         int handled = foulOrderService.syncFoulOrdersFromDaysAgo(day, pageSize);
         log.info("违规订单采集结束 处理={} 条 耗时={}ms", handled, System.currentTimeMillis() - start);
@@ -105,8 +93,6 @@ public class FoulOrderCollectionTask {
     public static class FoulOrderParam {
         /** 从今天往前推几天作为查询起点（天），默认 30，上限 30 */
         private Integer day = MAX_DAY;
-        /** 查询时间跨度（天），官方上限 30，默认 7 */
-        private Integer span = 7;
         /** 每页条数 */
         private Integer pageSize = DataokeService.FOUL_ORDER_PAGE_SIZE;
     }

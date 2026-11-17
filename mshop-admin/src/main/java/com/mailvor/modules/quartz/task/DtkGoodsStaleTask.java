@@ -1,8 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.mailvor.modules.quartz.utils.TaskParams;
 import com.mailvor.modules.tk.service.DtkGoodsSyncService;
-import com.mailvor.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -55,15 +55,10 @@ public class DtkGoodsStaleTask {
     }
 
     private static int readPageSize(String paramStr) {
-        if (StringUtils.isBlank(paramStr) || !paramStr.trim().startsWith("{")) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        try {
-            Integer size = JSON.parseObject(paramStr).getInteger("pageSize");
-            return com.mailvor.modules.tk.param.DtkScrollPageParam.normalizePageSize(
-                    size == null ? DEFAULT_PAGE_SIZE : size);
-        } catch (RuntimeException e) {
-            return DEFAULT_PAGE_SIZE;
-        }
+        // 统一策略：坏 JSON 抛异常（ExecutionJob 会记录失败并暂停任务），不再静默用默认值
+        JSONObject o = TaskParams.parseObject(paramStr, "失效商品检测任务");
+        Integer size = o.getInteger("pageSize");
+        return com.mailvor.modules.tk.param.DtkScrollPageParam.normalizePageSize(
+                size == null ? DEFAULT_PAGE_SIZE : size);
     }
 }

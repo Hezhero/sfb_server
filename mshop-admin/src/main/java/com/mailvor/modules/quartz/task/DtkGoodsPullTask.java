@@ -1,6 +1,6 @@
 package com.mailvor.modules.quartz.task;
 
-import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskParams;
 import com.mailvor.modules.tk.param.PullGoodsByTimeParam;
 import com.mailvor.modules.tk.service.DtkGoodsSyncService;
 import com.mailvor.utils.StringUtils;
@@ -46,15 +46,8 @@ public class DtkGoodsPullTask {
 
     /** Quartz 反射调用入口（有 params 版本） */
     public void run(String paramStr) {
-        PullGoodsByTimeParam param;
-        if (StringUtils.isBlank(paramStr)) {
-            param = new PullGoodsByTimeParam();
-        } else {
-            param = JSON.parseObject(paramStr, PullGoodsByTimeParam.class);
-        }
-        if (param == null) {
-            param = new PullGoodsByTimeParam();
-        }
+        // 统一参数解析策略：坏 JSON 抛异常（ExecutionJob 记录失败并暂停任务）
+        PullGoodsByTimeParam param = TaskParams.parse(paramStr, PullGoodsByTimeParam.class, "定时拉取商品任务");
 
         Integer hours = readInt(paramStr, "hours");
         if (StringUtils.isBlank(param.getStartTime()) || StringUtils.isBlank(param.getEndTime())) {
@@ -86,15 +79,8 @@ public class DtkGoodsPullTask {
         run(null);
     }
 
-    /** 读任务级整型参数（hours / pageSize 等），缺失或脏值返回 null */
+    /** 读任务级整型参数（hours / pageSize 等），缺失返回 null */
     private static Integer readInt(String paramStr, String key) {
-        if (StringUtils.isBlank(paramStr) || !paramStr.trim().startsWith("{")) {
-            return null;
-        }
-        try {
-            return JSON.parseObject(paramStr).getInteger(key);
-        } catch (RuntimeException e) {
-            return null;
-        }
+        return TaskParams.parseObject(paramStr, "定时拉取商品任务").getInteger(key);
     }
 }

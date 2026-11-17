@@ -1,9 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.mailvor.modules.csj.service.CsjEcomOrderService;
-import com.mailvor.utils.StringUtils;
+import com.mailvor.modules.quartz.utils.TaskParams;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,17 +36,10 @@ public class CsjEcomOrderCollectionTask {
     private CsjEcomOrderService csjEcomOrderService;
 
     public void run(String paramStr) {
-        int minutes = DEFAULT_MINUTES;
-        if (StringUtils.isNotEmpty(paramStr)) {
-            try {
-                JSONObject param = JSON.parseObject(paramStr);
-                if (param != null && param.getInteger("minutes") != null) {
-                    minutes = Math.max(param.getInteger("minutes"), 1);
-                }
-            } catch (Exception e) {
-                log.warn("穿山甲订单采集参数解析失败，使用默认 {} 分钟: {}", DEFAULT_MINUTES, paramStr);
-            }
-        }
+        // 统一参数解析策略：坏 JSON 抛异常（ExecutionJob 记录失败并暂停任务），不再静默用默认值
+        JSONObject param = TaskParams.parseObject(paramStr, "穿山甲订单采集任务");
+        Integer minutesParam = param.getInteger("minutes");
+        int minutes = minutesParam == null ? DEFAULT_MINUTES : Math.max(minutesParam, 1);
         LocalDateTime end = LocalDateTime.now();
         LocalDateTime start = end.minusMinutes(minutes);
         Date startDate = Date.from(start.atZone(ZoneId.systemDefault()).toInstant());
