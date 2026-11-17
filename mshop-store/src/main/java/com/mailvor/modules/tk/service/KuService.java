@@ -7,7 +7,6 @@ package com.mailvor.modules.tk.service;
 
 import com.mailvor.modules.tk.config.KuCmsAddress;
 import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -38,7 +37,9 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,7 +53,35 @@ import java.util.regex.Pattern;
 @Slf4j
 @Component
 public class KuService {
-    public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    /**
+     * 签名日期格式。DateTimeFormatter 是不可变且线程安全的，替换了原来的静态
+     * SimpleDateFormat（并发 format 会产生字段串扰，导致签名错误）。
+     */
+    private static final DateTimeFormatter SIGN_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * 将 Date 格式化为签名所需的日期字符串。线程安全，供 clipboard/shortLink 共用。
+     */
+    public static String formatDate(Date date) {
+        return SIGN_DATE_FORMATTER.format(
+                LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
+    }
+
+    /**
+     * HTTP POST 接缝：便于测试观察请求体，也便于统一失败处理。
+     */
+    protected String postJson(String url, String json) {
+        return HttpUtils.doPost(url, json);
+    }
+
+    /** 上游失败时返回的结构化错误（JSON），调用方据此显式处理，不再出现空串 → NPE。 */
+    private static String errorJson(String message) {
+        JSONObject error = new JSONObject();
+        error.put("code", 500);
+        error.put("msg", message);
+        return error.toJSONString();
+    }
 
     public static final String KU_API_BASE = "https://v3.api.haodanku.com";
 
@@ -126,7 +155,7 @@ public class KuService {
          * 获取时间
          */
         Date currentDate = new Date();
-        String date = formatter.format(currentDate);
+        String date = formatDate(currentDate);
 
         /**
          * 生成签名
@@ -151,7 +180,31 @@ public class KuService {
         }
         String jsonStr = jsonObject.toJSONString();
         log.info("提交的JSOn字符串:"+jsonStr);
-        TkParseCodeVO codeVO = JSON.parseObject(convertUnicodeToCh(HttpUtil.post(KU_API_V3, jsonStr.toString())), TkParseCodeVO.class);
+        String response;
+        try {
+            response = convertUnicodeToCh(postJson(KU_API_V3, jsonStr));
+        } catch (Exception e) {
+            log.error("好单库 clipboard 请求失败", e);
+            TkParseCodeVO error = new TkParseCodeVO();
+            error.setCode(500);
+            error.setMsg("好单库请求失败: " + e.getMessage());
+            return error;
+        }
+        if (response == null || response.trim().isEmpty()) {
+            log.error("好单库 clipboard 返回空响应");
+            TkParseCodeVO error = new TkParseCodeVO();
+            error.setCode(500);
+            error.setMsg("好单库返回空响应");
+            return error;
+        }
+        TkParseCodeVO codeVO = JSON.parseObject(response, TkParseCodeVO.class);
+        if (codeVO == null) {
+            log.error("好单库 clipboard 响应无法解析: {}", response);
+            TkParseCodeVO error = new TkParseCodeVO();
+            error.setCode(500);
+            error.setMsg("好单库响应解析失败");
+            return error;
+        }
         // 好单库官方约定 code=1 或 200 均为成功（原实现只认 200，会把 code=1 误判为失败）
         if(codeVO.getCode() == 200 || codeVO.getCode() == 1) {
             codeVO.setCode(0);
@@ -170,7 +223,7 @@ public class KuService {
          * 获取时间
          */
         Date currentDate = new Date();
-        String date = formatter.format(currentDate);
+        String date = formatDate(currentDate);
         /**
          * 生成签名
          */
@@ -194,7 +247,23 @@ public class KuService {
         String jsonStr = jsonObject.toJSONString();
         log.info("转短链 提交的jsonn字符串:"+jsonStr);
 
-        return JSON.parseObject(convertUnicodeToCh(HttpUtils.doPost(KU_API_V3, jsonStr.toString()))).getJSONObject("data");
+        String response;
+        try {
+            response = convertUnicodeToCh(postJson(KU_API_V3, jsonStr));
+        } catch (Exception e) {
+            log.error("好单库 shortLink 请求失败", e);
+            return JSON.parseObject(errorJson("好单库短链请求失败: " + e.getMessage()));
+        }
+        if (response == null || response.trim().isEmpty()) {
+            log.error("好单库 shortLink 返回空响应");
+            return JSON.parseObject(errorJson("好单库短链返回空响应"));
+        }
+        JSONObject result = JSON.parseObject(response);
+        if (result == null) {
+            log.error("好单库 shortLink 响应无法解析: {}", response);
+            return JSON.parseObject(errorJson("好单库短链响应解析失败"));
+        }
+        return result.getJSONObject("data");
 
     }
     /**
