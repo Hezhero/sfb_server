@@ -570,4 +570,26 @@ public class OrderTask {
         }
         return 0;
     }
+
+    /** 闲鱼订单拉取与落库，复用 mw_order_tb 与现有分佣/冲正链路。 */
+    public Integer saveIdle(QueryIdleOrderParam param) {
+        IdleOrderResVo res;
+        try {
+            res = kuService.idleOrderList(param);
+        } catch (Exception e) {
+            log.error("闲鱼订单拉取失败：{}", e.getMessage());
+            return 0;
+        }
+        if (res != null && KuService.isKsSuccess(res.getCode()) && !CollectionUtils.isEmpty(res.getData())) {
+            List<MailvorTbOrder> orders = res.getData().stream()
+                    .map(MailvorIdleOrder::convert)
+                    .collect(Collectors.toList());
+            orders.stream().filter(o -> o.getUid() != null && o.getUid() > 0)
+                    .forEach(o -> RedisUtil.setFeeUid(o.getUid()));
+            orderService.saveOrUpdateBatch(orders);
+            log.debug("闲鱼订单保存 {} 条", orders.size());
+            return res.getMinId();
+        }
+        return 0;
+    }
 }

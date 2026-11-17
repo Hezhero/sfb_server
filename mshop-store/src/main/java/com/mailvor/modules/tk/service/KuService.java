@@ -14,6 +14,7 @@ import com.mailvor.modules.shop.service.MwSystemConfigService;
 import com.mailvor.modules.tk.constants.TkConstants;
 import com.mailvor.modules.tk.param.GoodsListDyParam;
 import com.mailvor.modules.tk.param.GoodsListKsParam;
+import com.mailvor.modules.tk.param.QueryIdleOrderParam;
 import com.mailvor.modules.tk.param.ParseContentParam;
 import com.mailvor.modules.tk.param.QueryDyKuParam;
 import com.mailvor.modules.tk.param.QueryEleKuParam;
@@ -115,6 +116,13 @@ public class KuService {
     public static final String TB_LIVE_GOODS_QUERY_API = KU_API_BASE + "/tblive_goods_query";
     public static final String TB_LIVE_LINK_API = KU_API_BASE + "/get_tblive_link";
     public static final String TB_LIVE_ORDER_LIST_API = KU_API_BASE + "/tb_live_order_list";
+
+    // 闲鱼（好单库普通接口，apikey 鉴权，无需申请权限）
+    public static final String IDLE_GOODS_QUERY_API = KU_API_BASE + "/idle_goods_query";
+    public static final String IDLE_GOODS_DETAIL_API = KU_API_BASE + "/idle_goods_detail";
+    public static final String IDLE_RECHARGE_API = KU_API_BASE + "/xy_prepaid_recharge";
+    public static final String IDLE_GENERAL_LINK_API = KU_API_BASE + "/idle_general_link";
+    public static final String IDLE_ORDER_LIST_API = KU_API_BASE + "/idle_order_list";
 
 
     /**
@@ -913,6 +921,85 @@ public class KuService {
         ResponseEntity<String> re = restTemplate.postForEntity(
                 java.net.URI.create(url), new HttpEntity<>(formBody, headers), String.class);
         return re == null ? null : re.getBody();
+    }
+
+    // ---------------- 闲鱼链路（好单库普通接口） ----------------
+
+    /** 闲鱼商品列表：keyword 搜索，min_id 游标 */
+    public IdleGoodsVo idleGoodsList(String keyword, Integer minId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        if (StringUtils.isNotBlank(keyword)) {
+            sb.append("&keyword=").append(urlEncode(keyword));
+        }
+        if (minId != null) {
+            sb.append("&min_id=").append(minId);
+        }
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(IDLE_GOODS_QUERY_API + "?" + sb), String.class);
+        return parseHdk(re == null ? null : re.getBody(), IdleGoodsVo.class, "闲鱼商品列表");
+    }
+
+    /**
+     * 闲鱼商品详情：itemid(加密ID，须URL编码) 与 plainItemId(数字ID) 二选一，不能同时传。
+     */
+    public IdleGoodsVo idleGoodsDetail(String itemId, String plainItemId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        if (StringUtils.isNotBlank(itemId)) {
+            sb.append("&itemid=").append(urlEncode(itemId));
+        } else if (StringUtils.isNotBlank(plainItemId)) {
+            sb.append("&plain_itemid=").append(urlEncode(plainItemId));
+        } else {
+            throw new IllegalArgumentException("闲鱼商品详情需要 itemid 或 plain_itemid");
+        }
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(IDLE_GOODS_DETAIL_API + "?" + sb), String.class);
+        return parseHdk(re == null ? null : re.getBody(), IdleGoodsVo.class, "闲鱼商品详情");
+    }
+
+    /** 闲鱼话费充值列表：type 1=50元/2=100元/3=200元区 */
+    public IdleRechargeVo idleRecharge(Integer type, Integer minId, Integer back) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key);
+        if (type != null) sb.append("&type=").append(type);
+        if (minId != null) sb.append("&min_id=").append(minId);
+        if (back != null) sb.append("&back=").append(back);
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(IDLE_RECHARGE_API + "?" + sb), String.class);
+        return parseHdk(re == null ? null : re.getBody(), IdleRechargeVo.class, "闲鱼话费充值");
+    }
+
+    /**
+     * 闲鱼推广转链：materialType 1商品/4口令或分享链接/5营销活动页。
+     * materialType=4 时 xyUrl 必填；=5 时 activityPageId 必填。
+     */
+    public IdleLinkVo idleGeneralLink(Integer materialType, String itemId, String xyUrl,
+                                      String activityPageId, String channel) {
+        StringBuilder body = new StringBuilder();
+        body.append("apikey=").append(key)
+                .append("&material_type=").append(materialType == null ? 1 : materialType);
+        if (StringUtils.isNotBlank(itemId)) body.append("&itemid=").append(urlEncode(itemId));
+        if (StringUtils.isNotBlank(xyUrl)) body.append("&xy_url=").append(urlEncode(xyUrl));
+        if (StringUtils.isNotBlank(activityPageId)) body.append("&activity_page_id=").append(urlEncode(activityPageId));
+        if (StringUtils.isNotBlank(channel)) body.append("&channel=").append(urlEncode(channel));
+        String response = postForm(IDLE_GENERAL_LINK_API, body.toString());
+        return parseHdk(response, IdleLinkVo.class, "闲鱼转链");
+    }
+
+    /** 闲鱼订单拉取；startTime/endTime 为 Unix 秒 */
+    public IdleOrderResVo idleOrderList(QueryIdleOrderParam param) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("apikey=").append(key)
+                .append("&min_id=").append(param.getMinId() == null ? 1 : param.getMinId())
+                .append("&back=").append(param.getBack() == null ? 100 : param.getBack());
+        if (param.getStartTime() != null) sb.append("&start_date=").append(param.getStartTime());
+        if (param.getEndTime() != null) sb.append("&end_date=").append(param.getEndTime());
+        if (param.getDateType() != null) sb.append("&date_type=").append(param.getDateType());
+        if (param.getState() != null) sb.append("&state=").append(param.getState());
+        ResponseEntity<String> re = restTemplate.getForEntity(
+                java.net.URI.create(IDLE_ORDER_LIST_API + "?" + sb), String.class);
+        return parseHdk(re == null ? null : re.getBody(), IdleOrderResVo.class, "闲鱼订单");
     }
 
     /** 好单库通用响应解析，带业务名用于中文错误提示 */

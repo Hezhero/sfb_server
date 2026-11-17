@@ -15,6 +15,7 @@ import com.mailvor.modules.tk.param.GoodsListKsParam;
 import com.mailvor.modules.tk.param.KuCustomParam;
 import com.mailvor.modules.tk.param.QueryKsOrderParam;
 import com.mailvor.modules.tk.param.QueryTbLiveOrderParam;
+import com.mailvor.modules.tk.param.QueryIdleOrderParam;
 import com.mailvor.modules.tk.param.jd.GoodsListJDParam;
 import com.mailvor.modules.tk.service.KuService;
 import com.mailvor.modules.tk.vo.*;
@@ -490,6 +491,45 @@ public class HaodankuController {
     @GetMapping(value = "/tb/live/order/list")
     public Object tbLiveOrderList(QueryTbLiveOrderParam param) {
         return kuService.tbLiveOrderList(param);
+    }
+
+    // ---------------- 闲鱼链路（好单库普通接口） ----------------
+
+    @GetMapping(value = "/idle/goods/list")
+    public Object idleGoodsList(@RequestParam(required = false) String keyword,
+                                @RequestParam(required = false) Integer minId) {
+        return kuService.idleGoodsList(keyword, minId);
+    }
+
+    /** itemid(加密,需URL编码) 与 plainItemId(数字) 二选一 */
+    @GetMapping(value = "/idle/goods/detail")
+    public Object idleGoodsDetail(@RequestParam(required = false) String itemId,
+                                  @RequestParam(required = false) String plainItemId) {
+        return kuService.idleGoodsDetail(itemId, plainItemId);
+    }
+
+    @GetMapping(value = "/idle/recharge/list")
+    public Object idleRecharge(@RequestParam(required = false) Integer type,
+                               @RequestParam(required = false) Integer minId,
+                               @RequestParam(required = false) Integer back) {
+        return kuService.idleRecharge(type, minId, back);
+    }
+
+    /** 闲鱼转链：需登录，channel=uid 归因；materialType 1商品/4口令/5活动页 */
+    @UserCheck
+    @PostMapping(value = "/idle/link")
+    public Object idleLink(@RequestParam Integer materialType,
+                           @RequestParam(required = false) String itemId,
+                           @RequestParam(required = false) String xyUrl,
+                           @RequestParam(required = false) String activityPageId) {
+        MwUser user = LocalUser.getUser();
+        String channel = user == null ? null : String.valueOf(user.getUid());
+        return kuService.idleGeneralLink(materialType, itemId, xyUrl, activityPageId, channel);
+    }
+
+    @GetMapping(value = "/idle/order/list")
+    public Object idleOrderList(QueryIdleOrderParam param) {
+        return kuService.idleOrderList(param);
     }
 
 }
