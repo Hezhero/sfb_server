@@ -93,7 +93,22 @@ curl -sS -m 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
 - 所有子代理提交完成后，主代理串行跑一次全量测试，统一验证并修复。
 - 这条优先于本文第 1 节的「跑测试命令」——那节是给单代理或主代理用的。
 
-## 6. 接手子代理半成品
+## 6. 子代理只写代码不跑测试时的高发错误
+
+主代理串行验证时，反复遇到同一批问题——接手时可直接按此清单核对，省去逐条排查：
+
+| 症状 | 根因 | 快速修复 |
+| --- | --- | --- |
+| 找不到 XXXParam / XXXVo | 新建了类但忘了在使用的文件里 import | 补 import；注意 `tk.param.*` 在该模块常是逐个列出而非通配 |
+| `@Resource(required=false)` 编译失败 | `javax.annotation.Resource` 无 `required` 属性（那是 `@Autowired` 的） | 改 `@Autowired(required=false)` |
+| `@AllArgsConstructor` 构造参数变多，破坏既有单测 | 新增的字段被 Lombok 纳入构造 | 手写原参数个数的构造器，新字段用字段注入 |
+| 跨包测试访问 protected 方法失败 | 测试与被测类不同包 | 方法改 public（或把测试挪到同包） |
+| builder 找不到某字段 | 字段在父类，Lombok builder 只覆盖本类 | 改用 setter 单独设置，或删掉该调用 |
+| `getQuery()` 断言编码值失败 | `URI.getQuery()` 已解码 | 断言编码值用 `getRawQuery()` |
+
+**这些全是编译/断言级问题**，不需要理解业务逻辑即可修复；主代理验证时优先扫这几类。
+
+## 7. 接手子代理半成品
 
 子代理可能中途失败，留下半成品。**不要直接 `git checkout .` / `git reset --hard`**。
 
