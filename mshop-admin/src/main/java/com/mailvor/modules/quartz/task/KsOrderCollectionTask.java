@@ -33,7 +33,7 @@ public class KsOrderCollectionTask extends OrderTask {
         saveKsOrders(param);
     }
 
-    protected void saveKsOrders(QueryKsOrderParam param) {
+    public void saveKsOrders(QueryKsOrderParam param) {
         log.debug("快手订单采集 start:{} end:{} minId:{}", param.getStart(), param.getEnd(), param.getMinId());
         Integer minId = saveKs(param);
         // 返回下一页游标，>当前页则继续翻页（与 EleKu/DyKu 采集任务一致）

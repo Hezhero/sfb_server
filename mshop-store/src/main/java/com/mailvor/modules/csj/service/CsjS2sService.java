@@ -29,6 +29,13 @@ public class CsjS2sService {
     private CsjS2sWhitelistMapper whitelistMapper;
 
     /**
+     * S2S 是否已启用（配置了 security key）。发奖服务据此决定是否强制白名单校验。
+     */
+    public boolean isEnabled() {
+        return securityKey != null && !securityKey.trim().isEmpty();
+    }
+
+    /**
      * 处理穿山甲 S2S 回调。
      *
      * @return 验签通过且落库成功返回 true；否则 false（我方需返回 isValid=false）

@@ -11,14 +11,11 @@ import com.mailvor.modules.csj.service.mapper.MwCsjRewardLogMapper;
 import com.mailvor.modules.user.domain.MwUser;
 import com.mailvor.modules.user.service.MwUserBillService;
 import com.mailvor.modules.user.service.mapper.UserMapper;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.Resource;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -44,7 +41,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@AllArgsConstructor
 public class MwCsjRewardServiceImpl implements MwCsjRewardService {
 
     private static final int STATUS_REWARDED = 1;
@@ -58,12 +54,20 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
      * S2S 白名单校验服务。可选依赖：未配置 S2S 时为 null，走原来的三层防刷逻辑，
      * 保证历史部署与既有单测向后兼容；配置了 S2S 后才强制两阶段校验。
      */
-    @Resource(required = false)
+    @Autowired(required = false)
     private CsjS2sService s2sService;
 
-    /** S2S 是否强制启用（配置了 security key 才生效） */
-    @Value("${csj.s2s-security-key:}")
-    private String s2sSecurityKey;
+    /**
+     * 4 参数构造：与工单 09 的既有单测保持兼容。
+     * s2sService 由 Spring 字段注入；测试中不注入时为 null，跳过 S2S 校验。
+     */
+    public MwCsjRewardServiceImpl(CsjConfig csjConfig, MwCsjRewardLogMapper rewardLogMapper,
+                                  UserMapper userMapper, MwUserBillService billService) {
+        this.csjConfig = csjConfig;
+        this.rewardLogMapper = rewardLogMapper;
+        this.userMapper = userMapper;
+        this.billService = billService;
+    }
 
     @Override
     public Map<String, Object> getClientConfig() {
@@ -144,8 +148,7 @@ public class MwCsjRewardServiceImpl implements MwCsjRewardService {
         // S2S 两阶段校验（第二层）：配置了 security key 时，必须先在 S2S 回调中
         // 验签通过并落库白名单，客户端上报才允许发奖。
         // 未配置 S2S（历史部署）时 s2sService 为 null 或 key 为空，跳过——保持向后兼容。
-        boolean s2sEnabled = s2sService != null
-                && s2sSecurityKey != null && !s2sSecurityKey.trim().isEmpty();
+        boolean s2sEnabled = s2sService != null && s2sService.isEnabled();
         if (s2sEnabled && !s2sService.isEligible(txId, uid)) {
             log.warn("穿山甲奖励被 S2S 白名单拒绝 uid={} tx={}", uid, txId);
             throw new MshopException("奖励验证未通过");

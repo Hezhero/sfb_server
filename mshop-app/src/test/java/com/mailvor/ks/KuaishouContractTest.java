@@ -42,7 +42,8 @@ public class KuaishouContractTest {
         MockRestServiceServer server = MockRestServiceServer.createServer(http);
         server.expect(request -> {
             assertEquals("/ks_item_list", request.getURI().getPath());
-            String query = request.getURI().getQuery();
+            // URI.getQuery() 会解码（中文变回"霸电"），断言编码值必须用 getRawQuery()
+            String query = request.getURI().getRawQuery();
             assertTrue(query.contains("apikey=test-apikey"));
             assertTrue(query.contains("keyword=%E9%9C%B8%E7%94%B5"));
             assertTrue(query.contains("min_id=7"));

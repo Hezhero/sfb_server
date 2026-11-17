@@ -66,7 +66,6 @@ public class MailvorKsKuOrder {
                 // 复用现有 external_info 归因机制（773026_<uid>_0200 中间段为 uid）
                 .externalInfo("773026_" + channelCode + "_0200")
                 .commissionRate(commissionRate())
-                .innerType(0)
                 .build();
     }
 
