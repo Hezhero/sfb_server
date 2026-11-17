@@ -206,11 +206,14 @@ public class KuService {
             return error;
         }
         // 好单库官方约定 code=1 或 200 均为成功（原实现只认 200，会把 code=1 误判为失败）
-        if(codeVO.getCode() == 200 || codeVO.getCode() == 1) {
+        Integer upstreamCode = codeVO.getCode();
+        if(upstreamCode != null && (upstreamCode == 200 || upstreamCode == 1)) {
             codeVO.setCode(0);
             //京东goodsId为空，需要使用skuId替换
+            // platType 可能为 null（上游返回空 data 或字段缺失），拆箱比较会 NPE
             TkParseVO parseVO = codeVO.getData();
-            if(parseVO != null && parseVO.getPlatType() == 2 && org.apache.commons.lang3.StringUtils.isBlank(parseVO.getGoodsId())) {
+            Integer platType = parseVO == null ? null : parseVO.getPlatType();
+            if(platType != null && platType == 2 && org.apache.commons.lang3.StringUtils.isBlank(parseVO.getGoodsId())) {
                 parseVO.setGoodsId(parseVO.getSkuId());
             }
         }
@@ -263,7 +266,14 @@ public class KuService {
             log.error("好单库 shortLink 响应无法解析: {}", response);
             return JSON.parseObject(errorJson("好单库短链响应解析失败"));
         }
-        return result.getJSONObject("data");
+        JSONObject data = result.getJSONObject("data");
+        if (data == null) {
+            // 上游返回错误码时没有 data（例如 HttpUtils 失败返回 {"code":500,...}），
+            // 直接返回 null 会让调用方 NPE。这里原样回传上游错误体，保证返回非 null。
+            log.warn("好单库 shortLink 响应无 data，原样回传: {}", response);
+            return result;
+        }
+        return data;
 
     }
     /**

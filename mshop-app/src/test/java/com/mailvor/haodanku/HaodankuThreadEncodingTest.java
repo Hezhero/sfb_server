@@ -48,6 +48,7 @@ import static org.junit.Assert.*;
 public class HaodankuThreadEncodingTest {
 
     private static final String PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String TEST_APP_SECRET = "testSecret";
     private static HttpServer server;
     private static int port;
 
@@ -123,12 +124,12 @@ public class HaodankuThreadEncodingTest {
     /** 捕获 postJson 请求体的假 KuService，返回 code=200 的成功响应。 */
     private static final class CapturingKuService extends KuService {
         final List<String> bodies = Collections.synchronizedList(new ArrayList<>());
-        final String appId = "testApp";
-        final String appSecret = "testSecret";
-
         CapturingKuService() {
-            ReflectionTestUtils.setField(this, "appId", appId);
-            ReflectionTestUtils.setField(this, "appSecret", appSecret);
+            // 用不同变量名，避免遮蔽 KuService 的 private appId/appSecret 字段。
+            // 必须通过 ReflectionTestUtils 设到父类字段上，否则 fastjson 序列化请求体时
+            // app_id=null 会被省略，而签名原文仍拼了 "app_idnull"，导致签名与请求体对不上。
+            ReflectionTestUtils.setField(this, "appId", "testApp");
+            ReflectionTestUtils.setField(this, "appSecret", TEST_APP_SECRET);
         }
 
         @Override
@@ -195,7 +196,7 @@ public class HaodankuThreadEncodingTest {
             for (String k : keys) {
                 raw.append(k).append(json.getString(k));
             }
-            raw.append(service.appSecret);
+            raw.append(TEST_APP_SECRET);
             String expected = SignMD5Util.MD5(raw.toString()).toUpperCase();
             assertEquals("签名与日期不匹配（疑似 SimpleDateFormat 串扰）: " + body,
                     expected, sign);
