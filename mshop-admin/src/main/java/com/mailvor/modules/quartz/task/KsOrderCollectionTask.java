@@ -1,8 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
 import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskWindow;
 import com.mailvor.modules.tk.param.QueryKsOrderParam;
-import com.mailvor.utils.OrderUtil;
 import com.mailvor.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class KsOrderCollectionTask extends OrderTask {
 
+    private static final int DEFAULT_MINUTES = 10;
+
     public void run(String paramStr) {
         QueryKsOrderParam param;
         if (StringUtils.isEmpty(paramStr)) {
@@ -23,13 +25,11 @@ public class KsOrderCollectionTask extends OrderTask {
         } else {
             param = JSON.parseObject(paramStr, QueryKsOrderParam.class);
         }
-        // 官方要求 Unix 秒级时间戳；默认采集最近 10 分钟，参数可覆盖。
-        if (param.getStart() == null || param.getEnd() == null || param.getStart() >= param.getEnd()) {
-            long end = OrderUtil.getSecondTimestamp();
-            long start = end - 10 * 60L;
-            param.setEnd(end);
-            param.setStart(start);
-        }
+        // 官方要求 Unix 秒级时间戳；窗口计算统一由 TaskWindow 持有
+        TaskWindow.UnixWindow window = TaskWindow.unixSeconds(
+                param.getStart(), param.getEnd(), DEFAULT_MINUTES);
+        param.setStart(window.start());
+        param.setEnd(window.end());
         saveKsOrders(param);
     }
 

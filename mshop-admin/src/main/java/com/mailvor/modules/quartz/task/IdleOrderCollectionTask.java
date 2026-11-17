@@ -1,8 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
 import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskWindow;
 import com.mailvor.modules.tk.param.QueryIdleOrderParam;
-import com.mailvor.utils.OrderUtil;
 import com.mailvor.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class IdleOrderCollectionTask extends OrderTask {
 
+    private static final int DEFAULT_MINUTES = 10;
+
     public void run(String paramStr) {
         QueryIdleOrderParam param;
         if (StringUtils.isEmpty(paramStr)) {
@@ -23,12 +25,11 @@ public class IdleOrderCollectionTask extends OrderTask {
         } else {
             param = JSON.parseObject(paramStr, QueryIdleOrderParam.class);
         }
-        if (param.getStartTime() == null || param.getEndTime() == null
-                || param.getStartTime() >= param.getEndTime()) {
-            long end = OrderUtil.getSecondTimestamp();
-            param.setEndTime(end);
-            param.setStartTime(end - 10 * 60L);
-        }
+        // 窗口计算统一由 TaskWindow 持有
+        TaskWindow.UnixWindow window = TaskWindow.unixSeconds(
+                param.getStartTime(), param.getEndTime(), DEFAULT_MINUTES);
+        param.setStartTime(window.start());
+        param.setEndTime(window.end());
         saveIdleOrders(param);
     }
 

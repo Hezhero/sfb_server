@@ -1,8 +1,8 @@
 package com.mailvor.modules.quartz.task;
 
 import com.alibaba.fastjson.JSON;
+import com.mailvor.modules.quartz.utils.TaskWindow;
 import com.mailvor.modules.tk.param.QueryTbLiveOrderParam;
-import com.mailvor.utils.OrderUtil;
 import com.mailvor.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TbLiveOrderCollectionTask extends OrderTask {
 
+    private static final int DEFAULT_MINUTES = 10;
+
     public void run(String paramStr) {
         QueryTbLiveOrderParam param;
         if (StringUtils.isEmpty(paramStr)) {
@@ -23,13 +25,11 @@ public class TbLiveOrderCollectionTask extends OrderTask {
         } else {
             param = JSON.parseObject(paramStr, QueryTbLiveOrderParam.class);
         }
-        // 官方要求 Unix 秒级时间戳；默认采集最近 10 分钟
-        if (param.getStartTime() == null || param.getEndTime() == null
-                || param.getStartTime() >= param.getEndTime()) {
-            long end = OrderUtil.getSecondTimestamp();
-            param.setEndTime(end);
-            param.setStartTime(end - 10 * 60L);
-        }
+        // 窗口计算统一由 TaskWindow 持有
+        TaskWindow.UnixWindow window = TaskWindow.unixSeconds(
+                param.getStartTime(), param.getEndTime(), DEFAULT_MINUTES);
+        param.setStartTime(window.start());
+        param.setEndTime(window.end());
         saveTbLiveOrders(param);
     }
 
