@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mailvor.modules.order.service.OrderLanded;
 import com.mailvor.modules.tk.domain.MailvorDyOrder;
 import com.mailvor.modules.tk.service.MailvorDyOrderService;
 import com.mailvor.utils.OrderUtil;
@@ -171,6 +172,9 @@ public class CsjEcomOrderService {
                 order.setUid(uid);
             }
             dyOrderService.save(order);
+            // 订单落地后刷新该用户今日预估——这条副作用此前只在 OrderTask 的 11 处
+            // 手工调用里维持，穿山甲这条链路整体漏了，导致收益曲线不刷新。
+            OrderLanded.landed(uid);
             return true;
         }
 

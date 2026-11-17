@@ -7,6 +7,7 @@ package com.mailvor.modules.tk.domain;
 import cn.hutool.core.util.NumberUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
+import com.mailvor.modules.order.service.OrderLanded;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -97,8 +98,8 @@ public class MailvorDyKuOrder{
                 .estimatedTotalCommission(predictMoney)
                 .realCommission(actualMoney)
                 .itemNum(itemNum)
-                //773026_8_0200 中间的是用户id
-                .externalInfo("773026_" + channelCode + "_0200")
+                // 归因串格式统一由 OrderLanded.Attribution 持有
+                .externalInfo(OrderLanded.Attribution.douyin(channelCode))
                 .commissionRate(NumberUtil.round(NumberUtil.div(actualMoney, payPrice), 2).doubleValue())
                 .build();
     }

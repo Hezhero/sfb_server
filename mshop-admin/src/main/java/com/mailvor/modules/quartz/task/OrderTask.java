@@ -14,6 +14,7 @@ import com.mailvor.modules.meituan.utils.MeituanSidUtil;
 import com.mailvor.modules.tk.config.JdConfig;
 import com.mailvor.modules.tk.config.PddConfig;
 import com.mailvor.modules.tk.config.TbConfig;
+import com.mailvor.modules.order.service.OrderLanded;
 import com.mailvor.modules.tk.domain.*;
 import com.mailvor.modules.tk.param.*;
 import com.mailvor.modules.tk.service.*;
@@ -147,7 +148,7 @@ public class OrderTask {
                         if(uid != null) {
                             order.setUid(uid);
                             //设置需要刷新今日预估的用户uid
-                            RedisUtil.setFeeUid(uid);
+                            OrderLanded.landed(uid);
                         }
                     }
                 });
@@ -210,7 +211,7 @@ public class OrderTask {
                 if(uid > 0) {
                     order.setUid(uid);
                     //设置需要刷新今日预估的用户uid
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
             });
 
@@ -254,7 +255,7 @@ public class OrderTask {
                 if(uid > 0) {
                     dyOrder.setUid(uid);
                     //设置需要刷新今日预估的用户uid
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
             });
             boolean saved = dyOrderService.saveOrUpdateBatch(orders);
@@ -284,7 +285,7 @@ public class OrderTask {
                 if(uid > 0) {
                     dyOrder.setUid(uid);
                     //设置需要刷新今日预估的用户uid
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
             });
             boolean saved = dyOrderService.saveOrUpdateBatch(orders);
@@ -353,7 +354,7 @@ public class OrderTask {
                     if(uid != null && uid > 0) {
                         pddOrder.setUid(uid);
                         //设置需要刷新今日预估的用户uid
-                        RedisUtil.setFeeUid(uid);
+                        OrderLanded.landed(uid);
                     }
                 }catch (Exception e) {
                     e.printStackTrace();
@@ -386,7 +387,7 @@ public class OrderTask {
                 if(uid > 0) {
                     vipOrder.setUid(uid);
                     //设置需要刷新今日预估的用户uid
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
                 if(!CollectionUtils.isEmpty(vipOrder.getDetailList())) {
                     VipOrderDetailDto vipOrderDetailDto = JSON.parseObject(JSON.toJSONString(vipOrder.getDetailList().get(0)), VipOrderDetailDto.class);
@@ -458,7 +459,7 @@ public class OrderTask {
                 Long uid = getMtOrderUid(order);
                 if (uid != null && uid > 0) {
                     order.setUid(uid);
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
             });
             boolean saved = mtOrderService.saveOrUpdateBatch(orders);
@@ -500,7 +501,7 @@ public class OrderTask {
                         if(uid > 0) {
                             dyOrder.setUid(uid);
                             //设置需要刷新今日预估的用户uid
-                            RedisUtil.setFeeUid(uid);
+                            OrderLanded.landed(uid);
                         }
                     }catch (Exception e) {
                         e.printStackTrace();
@@ -539,7 +540,7 @@ public class OrderTask {
                 Long uid = OrderUtil.getDyOrderUser(order.getExternalInfo());
                 if (uid != null && uid > 0) {
                     order.setUid(uid);
-                    RedisUtil.setFeeUid(uid);
+                    OrderLanded.landed(uid);
                 }
             });
             boolean saved = dyOrderService.saveOrUpdateBatch(orders);
@@ -563,7 +564,7 @@ public class OrderTask {
                     .map(MailvorTbLiveOrder::convert)
                     .collect(Collectors.toList());
             orders.stream().filter(o -> o.getUid() != null && o.getUid() > 0)
-                    .forEach(o -> RedisUtil.setFeeUid(o.getUid()));
+                    .forEach(o -> OrderLanded.landed(o.getUid()));
             orderService.saveOrUpdateBatch(orders);
             log.debug("淘宝更高佣订单保存 {} 条", orders.size());
             return res.getMinId();
@@ -585,7 +586,7 @@ public class OrderTask {
                     .map(MailvorIdleOrder::convert)
                     .collect(Collectors.toList());
             orders.stream().filter(o -> o.getUid() != null && o.getUid() > 0)
-                    .forEach(o -> RedisUtil.setFeeUid(o.getUid()));
+                    .forEach(o -> OrderLanded.landed(o.getUid()));
             orderService.saveOrUpdateBatch(orders);
             log.debug("闲鱼订单保存 {} 条", orders.size());
             return res.getMinId();

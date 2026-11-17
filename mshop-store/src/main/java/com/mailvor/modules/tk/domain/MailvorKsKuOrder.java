@@ -2,6 +2,7 @@ package com.mailvor.modules.tk.domain;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import cn.hutool.core.util.NumberUtil;
+import com.mailvor.modules.order.service.OrderLanded;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -63,8 +64,8 @@ public class MailvorKsKuOrder {
                 .paySuccessTime(paid > 0 ? new Date(paid) : null)
                 .settleTime(earn > 0 ? new Date(earn) : null)
                 .flowPoint(flowPoint(orderStatus, settledStatus))
-                // 复用现有 external_info 归因机制（773026_<uid>_0200 中间段为 uid）
-                .externalInfo("773026_" + channelCode + "_0200")
+                // 归因串格式统一由 OrderLanded.Attribution 持有，不再各处手写
+                .externalInfo(OrderLanded.Attribution.douyin(channelCode))
                 .commissionRate(commissionRate())
                 .build();
     }
