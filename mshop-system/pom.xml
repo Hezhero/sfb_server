@@ -63,15 +63,16 @@
             <artifactId>thumbnailator</artifactId>
             <version>0.4.19</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.aspose/aspose-words -->
-        <!-- https://mvnrepository.com/artifact/com.aspose/aspose-words -->
-        <!-- https://mvnrepository.com/artifact/com.aspose/aspose-words -->
+        <!--
+            docx -> PDF 转换：原 Aspose.Words（商业闭源，需 license，否则带评估水印）
+            于 2026-11-18 移除，改用 JODConverter(Local) 驱动 LibreOffice Headless。
+            许可证：JODConverter Apache-2.0 / LibreOffice MPL-2.0，均商用友好。
+            运维需在服务器安装 LibreOffice 并配置中文字体，详见 docs/12-Aspose替换选型报告.md。
+        -->
         <dependency>
-            <groupId>com.aspose</groupId>
-            <artifactId>aspose-words</artifactId>
-            <version>11.10.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../lib/aspose-words-18.6.jar</systemPath>
+            <groupId>org.jodconverter</groupId>
+            <artifactId>jodconverter-local</artifactId>
+            <version>4.4.6</version>
         </dependency>
         <!--
             PDF 处理库：原 iText 5.5.13.3 为 AGPL v3，

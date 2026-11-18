@@ -1,9 +1,7 @@
 package com.junchen.utils;
 
 import cn.hutool.core.io.FileUtil;
-import com.aspose.words.Document;
-import com.aspose.words.License;
-import com.aspose.words.SaveFormat;
+import org.jodconverter.local.LocalConverter;
 import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfReader;
@@ -98,51 +96,30 @@ public class WordUtil {
     }
 
     /**
+     * word 转 PDF。
      *
-     * @Title: getLicense
-     * @Description:验证license许可凭证
-     * @return boolean 返回验证License状态
-     */
-    private static boolean getLicense(String licenseUrl) {
-        boolean result = true;
-        try {
-            URL url = new URL(licenseUrl);
-            InputStream inputStream = url.openStream();
-            new License().setLicense(inputStream);
-        } catch (Exception e) {
-            result = false;
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    /**
+     * <p>2026-11-18：由商业库 Aspose.Words 改为 JODConverter(Local) 驱动本机
+     * LibreOffice Headless，彻底去除商业授权与评估水印。依赖服务器已安装
+     * LibreOffice 及中文字体（详见 docs/12-Aspose替换选型报告.md）。</p>
      *
-     * @Title: wordConverterToPdf
-     * @Description: word转pdf(aspose转换)
-     * @param wordPath word 全路径，包括文件全称
-     * @param pdfPath pdf 保存路径，包括文件全称
-     * @return boolean 返回转换状态
+     * @param wordPath   docx 源文件全路径
+     * @param pdfPath    目标 pdf 全路径
+     * @param licenseUrl 兼容旧签名而保留，已不再使用（无需 Aspose license）
+     * @return 转换是否成功
      */
     public static boolean wordConverterToPdf(String wordPath, String pdfPath, String licenseUrl) {
-        System.out.println("===================aspose开始转换=======================");
-        //开始时间
         long start = System.currentTimeMillis();
-        boolean bool = false;
-        // 验证License,若不验证则转化出的pdf文档会有水印产生
-        if (!getLicense(licenseUrl)) return bool;
         try {
-            FileOutputStream os = new FileOutputStream(pdfPath);// 新建一个pdf文档输出流
-            Document doc = new Document(wordPath);// Address是将要被转化的word文档
-            doc.save(os, SaveFormat.PDF);// 全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
-            os.close();
-            bool = true;
+            File source = new File(wordPath);
+            File target = new File(pdfPath);
+            LocalConverter.builder().build().convert(source).to(target).execute();
+            return target.exists() && target.length() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("word 转 PDF 失败（请确认服务器已安装 LibreOffice）：" + e.getMessage());
+            return false;
         } finally {
-            System.out.println("(aspose)word转换PDF完成，用时"+(System.currentTimeMillis()-start)/1000.0+"秒");
+            System.out.println("word 转 PDF 完成，用时" + (System.currentTimeMillis() - start) / 1000.0 + "秒");
         }
-        return bool;
     }
     public static String generateEContract(String localPath, Long uid, Map<String, String> replaceMap,
                                            String faceUrl, String contractUrl, String licenseUrl, String sealUrl,
