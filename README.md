@@ -2,7 +2,7 @@
 
 苏分宝是一套包含 **Flutter APP、运营管理后台和 Java 服务端** 的淘客系统，围绕商品查券、推广转链、订单采集、佣金结算、分销与提现开展业务。
 
-本仓库为开源版 Java 服务端 `sfb_server`，包含管理端 API、APP API、核心业务模块与订单采集任务。当前使用 **Java 8 + Spring Boot 2.6.7**，与商业版服务端的环境要求分别说明。
+本仓库为开源版 Java 服务端 `sfb_server`，包含管理端 API、APP API、核心业务模块与订单采集任务。当前使用 **JDK 17 + Spring Boot 2.6.7**，与商业版服务端的环境要求分别说明。
 
 开源版功能按当前 `sfb_admin`、`sfb_server`、`sfb` 三个项目整理；商业版能力与交付范围参照官方文档。
 
@@ -68,11 +68,11 @@
 | --- | --- | --- |
 | 管理端 | Vue 3.5、Element Plus 2、Vite 5、Pinia、Vue Router 4；建议 Node.js 20+ | Vue 3、Element Plus、Node.js 20+ |
 | APP | 本次升级验证使用 Flutter 3.47.3 / Dart 3.13.3；约束为 Flutter ≥ 3.44、Dart ≥ 3.12 | Flutter 3.47.3 / Dart 3.13.3 |
-| 服务端 | Java 8、Spring Boot 2.6.7、MyBatis Plus | Java 25、Spring Boot 4.1.1 |
+| 服务端 | JDK 17、Spring Boot 2.6.7、MyBatis Plus | Java 25、Spring Boot 4.1.1 |
 | 数据存储 | MySQL 5.7、Redis | MySQL 5.7+、Redis |
 | 小程序 / 鸿蒙 | 本 README 对应的三个开源仓库未包含独立交付端 | uni-app 小程序；鸿蒙使用独立 Flutter-OH 工具链，详见对应文档 |
 
-当前开源 APP 最低支持 **Android 7.0（API 24）/ iOS 15**。Android 构建配置为 AGP 8.11.1、Gradle 8.14、Kotlin 2.3.20、JDK 17；iOS 本地构建需要 macOS 与 Xcode。APP 的 Android JDK 与服务端 Java 8 是两套构建环境。
+当前开源 APP 最低支持 **Android 7.0（API 24）/ iOS 15**。Android 构建配置为 AGP 8.11.1、Gradle 8.14、Kotlin 2.3.20、JDK 17；iOS 本地构建需要 macOS 与 Xcode。APP 的 Android JDK 与服务端 JDK 17 是两套构建环境。
 
 ## 服务端模块
 
@@ -104,7 +104,7 @@ server/
 
 ### 1. 准备环境与 SQL
 
-- 使用 **JDK 8** 与兼容 Java 8 的 Maven，执行 `java -version`、`mvn -v` 核对实际 Java 环境。
+- 使用 **JDK 17** 与兼容 JDK 17 的 Maven，执行 `java -version`、`mvn -v` 核对实际 Java 环境。
 - 准备 MySQL 和 Redis，从[SQL 获取页面](https://www.mailvor.com/02.开源版本/01.开发文档/10.db-get.html)取得初始化脚本并导入。
 - 拉取完整仓库，保留根目录 `lib/`，Maven 配置会引用其中的第三方 JAR。
 

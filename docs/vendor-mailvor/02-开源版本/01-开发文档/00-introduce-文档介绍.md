@@ -22,14 +22,14 @@
 
 | 端 | 技术栈 / 环境 |
 | --- | --- |
-| 服务端 | Java 8、Spring Boot 2.7.18、MyBatis Plus；Maven 需使用 Java 8 |
+| 服务端 | JDK 17、Spring Boot 2.7.18、MyBatis Plus；Maven 需使用 JDK 17 |
 | 管理端 | Vue 3、Element Plus、Vite 5、Pinia；建议 Node.js 20+ |
 | APP | Flutter 3.47.3 / Dart 3.13.3；约束 Flutter ≥ 3.44、Dart ≥ 3.12 |
 | Android 构建 | JDK 17、SDK 37、NDK 28.2.13676358、AGP 8.11.1、Gradle 8.14 |
 | iOS 构建 | macOS、Xcode、CocoaPods；最低 iOS 15 |
 | 数据存储 | MySQL 5.7、Redis |
 
-APP 最低支持 Android 7.0（API 24）。服务端 Java 8 与 Android 构建的 JDK 17 是两套环境；不要因为切换端而沿用错误的 `JAVA_HOME`。
+APP 最低支持 Android 7.0（API 24）。服务端 JDK 17 与 Android 构建的 JDK 17 是两套环境；不要因为切换端而沿用错误的 `JAVA_HOME`。
 
 ## 开发顺序
 

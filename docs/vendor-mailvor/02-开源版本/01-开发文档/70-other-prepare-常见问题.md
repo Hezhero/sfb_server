@@ -15,7 +15,7 @@
 
 ### 3.服务端启动循环引用报错
 
-- 一般发生在macos系统，建议使用jdk1.8和maven3.8.1，然后重新mvn clean install即可解决 ![](https://www.mailvor.com/opensource/develop/img/loop.png)
+- 一般发生在macos系统，建议使用jdk17和maven3.8.1，然后重新mvn clean install即可解决 ![](https://www.mailvor.com/opensource/develop/img/loop.png)
 
 ### 4.我用Windows可以开发App吗
 

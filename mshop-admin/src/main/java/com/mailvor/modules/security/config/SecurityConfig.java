@@ -119,8 +119,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // 文件
                 .antMatchers("/avatar/**").permitAll()
                 .antMatchers("/file/**").permitAll()
-                // 阿里巴巴 druid
-                .antMatchers("/druid/**").permitAll()
+                // Druid 监控台不再匿名放行：必须登录管理后台才能访问，
+                // 否则监控页暴露 SQL/URI/会话等敏感信息（安全隐患修复）
                 .antMatchers("/api/canvas/**").permitAll()
                 // 放行OPTIONS请求
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()

@@ -144,8 +144,8 @@ public class JdService {
     public static void main(String[] args) throws Exception {
 
         String url = "https://api.jd.com/routerjson";
-        String clientId = "a5a67f64a5491868c8436301";
-        String clientSecret = "d22224c5a8bb6e638cb06";
+        String clientId = "<JD_CLIENT_ID>";
+        String clientSecret = "<JD_CLIENT_SECRET>";
 //        PopClient client = new PopHttpClient(clientId, clientSecret);
 //
 //        PddDdkOrderListRangeGetRequest request = new PddDdkOrderListRangeGetRequest();

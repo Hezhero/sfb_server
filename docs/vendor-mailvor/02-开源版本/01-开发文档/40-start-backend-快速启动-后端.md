@@ -4,9 +4,9 @@
 
 # 快速启动（后端项目）
 
-## 1. 准备 Java 8 与源码
+## 1. 准备 JDK 17 与源码
 
-当前开源服务端使用 Java 8、Spring Boot 2.6.7。使用 IDEA 或其他支持 Maven / Lombok 的 IDE，先核对：
+当前开源服务端使用 JDK 17、Spring Boot 2.6.7。使用 IDEA 或其他支持 Maven / Lombok 的 IDE，先核对：
 
 ```bash
 java -version
@@ -15,7 +15,7 @@ git clone https://gitee.com/jacky4631/sfb_server.git
 cd sfb_server
 ```
 
-两条版本命令都应显示 Java 8。拉取完整仓库，保留 `lib/` 中 Maven 引用的第三方 SDK。
+两条版本命令都应显示 JDK 17。拉取完整仓库，保留 `lib/` 中 Maven 引用的第三方 SDK。
 
 ## 2. 初始化 MySQL 与 Redis
 

@@ -18,7 +18,7 @@ flutter doctor -v
 | Android | JDK 17、SDK 37、NDK 28.2.13676358；AGP 8.11.1、Gradle 8.14 |
 | iOS | macOS、Xcode、CocoaPods；最低 iOS 15 |
 
-APP 最低支持 Android 7.0（API 24）。Android 使用的 JDK 17 与服务端 Java 8 分开配置。
+APP 最低支持 Android 7.0（API 24）。Android 使用的 JDK 17 与服务端 JDK 17 分开配置。
 
 ## 2. 获取代码与依赖
 

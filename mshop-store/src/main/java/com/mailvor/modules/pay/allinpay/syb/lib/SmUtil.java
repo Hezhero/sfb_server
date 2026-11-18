@@ -33,7 +33,7 @@ public class SmUtil {
 		/**商户平台分配的appid,也是签名的certid**/
 		String appid = "00000156";
 		/**商户sm2私钥,用于向通联发起请求前进行签名**/
-		String cusPrivateKey = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgjj4Rk+b0YjwO+UwXofnHf4bK+kaaY5Btkd8nMP2VimmgCgYIKoEcz1UBgi2hRANCAAQqlALW4qGC3bP1x3wo5QsKxaCMEZJ2ODTTwOQ+d8UGU7GoK/y/WMBQWf5upMnFU06p5FxGooXYYoBtldgm03hq";
+		String cusPrivateKey = "<SM2_PRIVATE_KEY_FROM_CONFIG>";
 		/**商户sm2公钥，需要配置到通联商户平台**/
 		String cusPubKey = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEKpQC1uKhgt2z9cd8KOULCsWgjBGSdjg008DkPnfFBlOxqCv8v1jAUFn+bqTJxVNOqeRcRqKF2GKAbZXYJtN4ag==";
 

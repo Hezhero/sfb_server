@@ -32,7 +32,7 @@ public class AesUtil {
     }
 
     public static void main(String[] args) {
-        AesUtil.init("LwGop09a6WLonrZNzaihBY==");
+        AesUtil.init("<AES_KEY_FROM_CONFIG>");
         String encStr = AesUtil.encrypt("https://oss.mailvor.cn/dlb/card/2411/3/E2411T1682921050.pdf");
         System.out.println("encStr:  " + encStr);
         String decStr = AesUtil.decrypt(encStr);

@@ -6,7 +6,7 @@
 
 ## 1. 构建服务
 
-使用 Java 8，在 `sfb_server` 根目录执行：
+使用 JDK 17，在 `sfb_server` 根目录执行：
 
 ```bash
 mvn -pl mshop-admin,mshop-app -am package -DskipTests

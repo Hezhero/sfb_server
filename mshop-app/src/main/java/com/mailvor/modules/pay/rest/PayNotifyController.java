@@ -31,6 +31,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -81,6 +82,10 @@ public class PayNotifyController {
 
     @Resource
     private RestTemplate restTemplate;
+
+    /** Apple 内购共享密钥：从配置注入，禁止硬编码在源码中 */
+    @Value("${ios.shared-secret:}")
+    private String iosSharedSecret;
 
     @Resource
     private MwUserService userService;
@@ -164,7 +169,8 @@ public class PayNotifyController {
         }
         JSONObject obj = new JSONObject();
         obj.put("receipt-data", receipt);
-        obj.put("password", "c3d6eace374c4f038c5d2c8df42b3793");
+        // 共享密钥从配置注入；未配置时 Apple 会拒绝校验，不会误用硬编码密钥
+        obj.put("password", iosSharedSecret == null ? "" : iosSharedSecret);
         JSONObject job = restTemplate.postForObject(verifyUrl, obj, JSONObject.class);
 
         if (job != null) {
