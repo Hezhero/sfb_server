@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/30.app-prepare.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/30.app-prepare.html
 > 抓取时间: 2026-10-29 22:00:05
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # APP准备
 
@@ -17,13 +17,13 @@
 
 ### 1. 修改包名
 
-- 全局搜索com.mailvor.sufenbao，替换成自己的包名。 ![](https://www.mailvor.com/opensource/develop/img/app1.png)
-- 按照包名结构修改MainActivity.java所在路径。 ![](https://www.mailvor.com/opensource/develop/img/app2.png)
+- 全局搜索com.junchen.sanyinghui，替换成自己的包名。 ![](https://syh.hzhero.cn/opensource/develop/img/app1.png)
+- 按照包名结构修改MainActivity.java所在路径。 ![](https://syh.hzhero.cn/opensource/develop/img/app2.png)
 
 ## 2. 申请安卓证书
 
-- jks或者keystore结尾的证书都可以，申请流程后续完善，先可以参考百度，申请后放到该目录 ![](https://www.mailvor.com/opensource/develop/img/app3.png)
-- 修改证书配置 ![](https://www.mailvor.com/opensource/develop/img/app4.png)
+- jks或者keystore结尾的证书都可以，申请流程后续完善，先可以参考百度，申请后放到该目录 ![](https://syh.hzhero.cn/opensource/develop/img/app3.png)
+- 修改证书配置 ![](https://syh.hzhero.cn/opensource/develop/img/app4.png)
 
 ## 3. 申请百川安全图
 
@@ -31,8 +31,8 @@ tip
 
 百川安全图作用：淘宝联盟渠道授权，可以自动绑定订单。
 
-- 进入[阿里妈妈](https://pub.alimama.com/third/manage/record/site.htm)![](https://www.mailvor.com/opensource/develop/img/tao1.png)![](https://www.mailvor.com/opensource/develop/img/tao2.png)![](https://www.mailvor.com/opensource/develop/img/tao3.png)![](https://www.mailvor.com/opensource/develop/img/tao4.png)![](https://www.mailvor.com/opensource/develop/img/tao5.png)![](https://www.mailvor.com/opensource/develop/img/tao6.png)![](https://www.mailvor.com/opensource/develop/img/tao7.png)![](https://www.mailvor.com/opensource/develop/img/tao8.png)
+- 进入[阿里妈妈](https://pub.alimama.com/third/manage/record/site.htm)![](https://syh.hzhero.cn/opensource/develop/img/tao1.png)![](https://syh.hzhero.cn/opensource/develop/img/tao2.png)![](https://syh.hzhero.cn/opensource/develop/img/tao3.png)![](https://syh.hzhero.cn/opensource/develop/img/tao4.png)![](https://syh.hzhero.cn/opensource/develop/img/tao5.png)![](https://syh.hzhero.cn/opensource/develop/img/tao6.png)![](https://syh.hzhero.cn/opensource/develop/img/tao7.png)![](https://syh.hzhero.cn/opensource/develop/img/tao8.png)
 
 ## 4. 极光推送额外修改
 
-![](https://www.mailvor.com/opensource/develop/img/jiguang1.png)
+![](https://syh.hzhero.cn/opensource/develop/img/jiguang1.png)

@@ -47,7 +47,7 @@ except Exception:
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 TASK_DIR = os.path.join(
-    REPO_ROOT, "mshop-admin", "src", "main", "java", "com", "mailvor", "modules", "quartz", "task"
+    REPO_ROOT, "mshop-admin", "src", "main", "java", "com", "junchen", "modules", "quartz", "task"
 )
 DEFAULT_SQL = os.path.join(REPO_ROOT, "docs", "sql", "system_quartz_job.sql")
 

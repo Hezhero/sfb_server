@@ -5,16 +5,19 @@
 
 ## 背景
 
-仓库中的代码、文档、包名、第三方账号与 LICENSE 均带有原品牌「苏分宝」、原主体
-「苏州迈沃通信有限公司」及原版权声明。用户声明本套代码为自有代码，原 LICENSE 属
+仓库中的代码、文档、包名、第三方账号与 LICENSE 均带有原品牌「三盈会」、原主体
+「济南隽宸信息科技有限公司」及原版权声明。用户声明本套代码为自有代码，原 LICENSE 属
 历史模板误用，需要统一替换为「三盈会」品牌与自有许可。
 
 ## 决策
 
 1. 品牌统一为「三盈会」，全拼 `sanyinghui`，简写 `syh`。
-2. Java 包名根 `com.mailvor` → `com.junchen`；`com.mailvor.sufenbao` → `com.junchen.sanyinghui`。
-3. LICENSE 权利主体替换为自有主体，原版权/软著声明移除。
-4. JDK 基线从 Java 8 抬升到 17，文档与构建配置一致。
+2. Java 包名根 `com.junchen` → `com.junchen`；`com.junchen.sanyinghui` → `com.junchen.sanyinghui`。
+3. 权利主体：济南隽宸信息科技有限公司 / 隽宸信息 → 济南隽宸信息科技有限公司。
+   官网与品牌域名：syh.hzhero.cn / syh.hzhero.cn → syh.hzhero.cn。
+   ICP 备案号：鲁ICP备2022004140号-1 → 鲁ICP备2022004140号-1。
+4. LICENSE 权利主体替换为自有主体，原版权/软著声明移除。
+5. JDK 基线从 Java 8 抬升到 17，文档与构建配置一致。
 
 ## 后果
 

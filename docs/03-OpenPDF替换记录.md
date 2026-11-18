@@ -37,7 +37,7 @@ OpenPDF 是 iText 4.2.0 的分支（`com.github.librepdf:openpdf`），采用 **
 +        </dependency>
 ```
 
-### 2.2 `mshop-system/src/main/java/com/mailvor/utils/WordUtil.java`
+### 2.2 `mshop-system/src/main/java/com/junchen/utils/WordUtil.java`
 
 ```diff
 -import com.itextpdf.text.Image;
@@ -130,7 +130,7 @@ itext 相关条目：0
 
 ```bash
 git checkout -- mshop-system/pom.xml \
-               mshop-system/src/main/java/com/mailvor/utils/WordUtil.java
+               mshop-system/src/main/java/com/junchen/utils/WordUtil.java
 mvn -pl mshop-admin,mshop-app -am package -DskipTests
 ```
 

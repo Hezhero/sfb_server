@@ -1,0 +1,247 @@
+/**
+ * Copyright (C) 2018-2024
+ * All rights reserved, Designed By syh.hzhero.cn
+ */
+package com.junchen.modules.security.service;
+
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.cache.impl.TimedCache;
+import cn.hutool.core.util.StrUtil;
+import com.junchen.constant.ShopConstants;
+import com.junchen.modules.security.config.SecurityProperties;
+import com.junchen.modules.security.security.vo.JwtUser;
+import com.junchen.modules.user.vo.OnlineUser;
+import com.junchen.utils.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+
+/**
+ * @author huangyu
+ * @Date 2019年10月26日21:56:27
+ */
+@Service
+@Slf4j
+public class OnlineUserService {
+    private static final TimedCache<String, List<OnlineUser>> memberSnapshotCache = CacheUtil.newTimedCache(60000);
+    private static final String MEMBER_SNAPSHOT_KEY = "mshop_app_login_user_snapshot";
+    private static final long MEMBER_SNAPSHOT_TTL = 60000L;
+    private static final int SNAPSHOT_BATCH_SIZE = 500;
+
+    private final SecurityProperties properties;
+    private RedisUtils redisUtils;
+
+    public OnlineUserService(SecurityProperties properties, RedisUtils redisUtils) {
+        this.properties = properties;
+        this.redisUtils = redisUtils;
+    }
+
+    /**
+     * 保存在线用户信息
+     * @param jwtUser /
+     * @param token /
+     * @param request /
+     */
+    public void save(JwtUser jwtUser, String token, HttpServletRequest request) {
+        String job = jwtUser.getDept() + "/" + jwtUser.getJob();
+        String ip = StringUtils.getIp(request);
+        String browser = StringUtils.getBrowser(request);
+        String address = StringUtils.getCityInfo(ip);
+        OnlineUser onlineUser = null;
+        try {
+            onlineUser = new OnlineUser(jwtUser.getUsername(), jwtUser.getNickName(), ip, address, EncryptUtils.desEncrypt(token), new Date());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        redisUtils.set(properties.getOnlineKey() + token, onlineUser, properties.getTokenValidityInSeconds() / 1000);
+    }
+
+    /**
+     * 查询全部数据
+     * @param filter /
+     * @param pageable /
+     * @return /
+     */
+    public Map<String, Object> getAll(String filter, Pageable pageable, int type) {
+        List<OnlineUser> onlineUsers = (type == 1)
+                ? filterUsers(getMemberOnlineSnapshot(), filter)
+                : getAll(filter, type);
+        return PageUtil.toPage(
+                PageUtil.toPage(pageable.getPageNumber(), pageable.getPageSize(), onlineUsers),
+                onlineUsers.size());
+    }
+
+    /**
+     * 在线会员快照缓存：翻页/搜索直接读内存，避免每次请求都对 Redis 全键空间 SCAN
+     */
+    private List<OnlineUser> getMemberOnlineSnapshot() {
+        List<OnlineUser> snapshot = memberSnapshotCache.get(MEMBER_SNAPSHOT_KEY, false);
+        if (snapshot != null) {
+            return snapshot;
+        }
+        synchronized (this) {
+            snapshot = memberSnapshotCache.get(MEMBER_SNAPSHOT_KEY, false);
+            if (snapshot != null) {
+                return snapshot;
+            }
+            List<String> keys = redisUtils.scan(ShopConstants.MSHOP_APP_LOGIN_USER + "*");
+            List<OnlineUser> users = new ArrayList<>(keys.size());
+            // MGET 分批，避免单命令携带过多 key 阻塞 Redis
+            for (int i = 0; i < keys.size(); i += SNAPSHOT_BATCH_SIZE) {
+                List<String> batch = keys.subList(i, Math.min(i + SNAPSHOT_BATCH_SIZE, keys.size()));
+                for (Object obj : redisUtils.multiGet(batch)) {
+                    // scan 与 mget 之间可能有过期键
+                    if (obj instanceof OnlineUser) {
+                        users.add((OnlineUser) obj);
+                    }
+                }
+            }
+            users.sort((o1, o2) -> o2.getLoginTime().compareTo(o1.getLoginTime()));
+            memberSnapshotCache.put(MEMBER_SNAPSHOT_KEY, users, MEMBER_SNAPSHOT_TTL);
+            return users;
+        }
+    }
+
+    private List<OnlineUser> filterUsers(List<OnlineUser> users, String filter) {
+        if (StringUtils.isBlank(filter)) {
+            return users;
+        }
+        List<OnlineUser> res = new ArrayList<>();
+        for (OnlineUser user : users) {
+            if (user.toString().contains(filter)) {
+                res.add(user);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 查询全部数据，不分页
+     * @param filter /
+     * @return /
+     */
+    public List<OnlineUser> getAll(String filter, int type) {
+        List<String> keys = null;
+        if (type == 1) {
+            keys = redisUtils.scan(ShopConstants.MSHOP_APP_LOGIN_USER + "*");
+        } else {
+            keys = redisUtils.scan(properties.getOnlineKey() + "*");
+        }
+
+
+        Collections.reverse(keys);
+        List<OnlineUser> onlineUsers = new ArrayList<>();
+        for (String key : keys) {
+            OnlineUser onlineUser = (OnlineUser) redisUtils.get(key);
+            if (StringUtils.isNotBlank(filter)) {
+                if (onlineUser.toString().contains(filter)) {
+                    onlineUsers.add(onlineUser);
+                }
+            } else {
+                onlineUsers.add(onlineUser);
+            }
+        }
+        onlineUsers.sort((o1, o2) -> o2.getLoginTime().compareTo(o1.getLoginTime()));
+        return onlineUsers;
+    }
+
+
+    /**
+     * 踢出用户
+     * @param key /
+     * @throws Exception /
+     */
+    public void kickOut(String key) throws Exception {
+        key = properties.getOnlineKey() + EncryptUtils.desDecrypt(key);
+        redisUtils.del(key);
+
+    }
+
+    /**
+     * 踢出移动端用户
+     * @param key /
+     * @throws Exception /
+     */
+    public void kickOutT(String key) throws Exception {
+        String[] split = StrUtil.split(key, StrUtil.COLON);
+        String keyt = ShopConstants.MSHOP_APP_LOGIN_USER + split[0] + StrUtil.COLON + EncryptUtils.desDecrypt(split[1]);
+        redisUtils.del(keyt);
+
+    }
+    public void kickOutByUsername(String username) {
+        String keyt = ShopConstants.MSHOP_APP_LOGIN_USER + username + "*";
+        Set<Object> obj = redisUtils.keys(keyt);
+        if(obj == null || obj.isEmpty()) {
+            return;
+        }
+        redisUtils.del(obj.toArray(new String[0]));
+    }
+    /**
+     * 退出登录
+     * @param token /
+     */
+    public void logout(String token) {
+        String key = properties.getOnlineKey() + token;
+        redisUtils.del(key);
+    }
+
+    /**
+     * 导出
+     * @param all /
+     * @param response /
+     * @throws IOException /
+     */
+    public void download(List<OnlineUser> all, HttpServletResponse response) throws IOException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (OnlineUser user : all) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("用户名", user.getUserName());
+            map.put("用户昵称", user.getNickName());
+            map.put("登录IP", user.getIp());
+            map.put("登录地点", user.getAddress());
+            map.put("登录日期", user.getLoginTime());
+            list.add(map);
+        }
+        FileUtil.downloadExcel(list, response);
+    }
+
+    /**
+     * 查询用户
+     * @param key /
+     * @return /
+     */
+    public OnlineUser getOne(String key) {
+        return (OnlineUser) redisUtils.get(key);
+    }
+
+    /**
+     * 检测用户是否在之前已经登录，已经登录踢下线
+     * @param userName 用户名
+     */
+    public void checkLoginOnUser(String userName, String igoreToken) {
+        List<OnlineUser> onlineUsers = getAll(userName, 0);
+        if (onlineUsers == null || onlineUsers.isEmpty()) {
+            return;
+        }
+        for (OnlineUser onlineUser : onlineUsers) {
+            if (onlineUser.getUserName().equals(userName)) {
+                try {
+                    String token = EncryptUtils.desDecrypt(onlineUser.getKey());
+                    if (StringUtils.isNotBlank(igoreToken) && !igoreToken.equals(token)) {
+                        this.kickOut(onlineUser.getKey());
+                    } else if (StringUtils.isBlank(igoreToken)) {
+                        this.kickOut(onlineUser.getKey());
+                    }
+                } catch (Exception e) {
+                    log.error("checkUser is error", e);
+                }
+            }
+        }
+    }
+
+}

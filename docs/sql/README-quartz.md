@@ -115,7 +115,7 @@ quartz:
 
 ## 4. 30 个任务清单
 
-任务包 `mshop-admin/src/main/java/com/mailvor/modules/quartz/task/` 下共 **31 个 `.java`**，但其中 `OrderTask` 是**基类**——它只有 `saveTb` / `saveJd` / `savePdd` 等落库方法，**没有 `run` 方法**，不能注册为任务。所以可注册任务是 **30 个**。
+任务包 `mshop-admin/src/main/java/com/junchen/modules/quartz/task/` 下共 **31 个 `.java`**，但其中 `OrderTask` 是**基类**——它只有 `saveTb` / `saveJd` / `savePdd` 等落库方法，**没有 `run` 方法**，不能注册为任务。所以可注册任务是 **30 个**。
 
 > 备注：工单原文写"31 个任务"，实际按"含 `run` 方法的类"统计是 30 个。本脚本录入 30 条，不虚报。
 

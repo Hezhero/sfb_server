@@ -1,0 +1,596 @@
+package com.junchen.modules.quartz.task;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.jd.open.api.sdk.domain.kplunion.OrderService.response.query.OrderRowQueryResult;
+import com.jd.open.api.sdk.domain.kplunion.OrderService.response.query.OrderRowResp;
+import com.junchen.dozer.service.IGenerator;
+import com.junchen.modules.dataoke.dto.OrderListGetResponseOrderListDTO;
+import com.junchen.modules.meituan.MeituanService;
+import com.junchen.modules.meituan.config.MeituanConfig;
+import com.junchen.modules.meituan.param.MeituanOrderParam;
+import com.junchen.modules.meituan.utils.MeituanUtil;
+import com.junchen.modules.meituan.utils.MeituanSidUtil;
+import com.junchen.modules.tk.config.JdConfig;
+import com.junchen.modules.tk.config.PddConfig;
+import com.junchen.modules.tk.config.TbConfig;
+import com.junchen.modules.order.service.OrderLanded;
+import com.junchen.modules.tk.domain.*;
+import com.junchen.modules.tk.param.*;
+import com.junchen.modules.tk.service.*;
+import com.junchen.modules.tk.vo.*;
+import com.junchen.modules.user.domain.MwUserUnion;
+import com.junchen.modules.user.service.MwUserUnionService;
+import com.junchen.modules.user.service.dto.VipOrderDetailDto;
+import com.junchen.utils.OrderUtil;
+import com.junchen.utils.RedisUtil;
+import com.junchen.utils.StringUtils;
+import com.pdd.pop.sdk.http.api.pop.response.PddDdkOrderListRangeGetResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static com.junchen.utils.OrderUtil.VIP_UID_PREFIX;
+
+/**
+ * @author Zheng Jie
+ * @date 2018-12-25
+ */
+@Slf4j
+@Component
+public class OrderTask {
+    protected static DateTimeFormatter FF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Resource
+    protected JunchenTbOrderService orderService;
+
+    @Resource
+    protected JunchenJdOrderService jdOrderService;
+    @Resource
+    protected JunchenPddOrderService pddOrderService;
+
+    @Resource
+    protected JunchenVipOrderService vipOrderService;
+    @Resource
+    protected JunchenDyOrderService dyOrderService;
+
+    @Resource
+    protected JunchenMtOrderService mtOrderService;
+
+    @Resource
+    protected JunchenEleOrderService eleOrderService;
+    @Resource
+    protected DataokeService dataokeService;
+
+    @Resource
+    protected PddService pddService;
+
+    @Resource
+    protected KuService kuService;
+
+    @Resource
+    private TbConfig tbConfig;
+
+    @Resource
+    private JdConfig jdConfig;
+
+    @Resource
+    private PddConfig pddConfig;
+
+    @Resource
+    protected JdService jdService;
+
+    @Resource
+    protected IGenerator generator;
+
+    @Resource
+    private MwUserUnionService userUnionService;
+
+    @Resource
+    private MeituanService meituanService;
+    @Resource
+    private MeituanConfig meituanConfig;
+
+    protected String saveTb(QueryTBParam param) {
+        TBResVo res = dataokeService.queryTBList(param);
+        if(res != null && res.getData() != null && res.getData().getResults() != null) {
+            List<JunchenTbOrder> orders = res.getData().getResults().getPublisher_order_dto();
+            if(CollectionUtils.isEmpty(orders)) {
+                return null;
+            }
+            try {
+                //过滤不是渠道pid和淘礼金pid的订单
+                List<String> adZoneIds = tbConfig.getAdZoneIds();
+                orders = orders.stream().filter(order-> {
+                    if(order.getAdzoneId() == null) {
+                        return false;
+                    }
+                    return adZoneIds.contains(order.getAdzoneId().toString());
+                }).collect(Collectors.toList());
+
+                // 上面过滤后 订单可能为空，为空就不做后续处理
+                if(CollectionUtils.isEmpty(orders)) {
+                    return null;
+                }
+
+                //获取订单的淘宝渠道id
+                List<String> pids = orders.stream()
+                        .filter(order-> order.getRelationId() != null && order.getRelationId() > 0)
+                        .map(order -> order.getRelationId().toString()).distinct().collect(Collectors.toList());
+                //获取用户uid
+                Map<String, Long> userUnionMap;
+                if(pids.isEmpty()) {
+                    userUnionMap = new HashMap<>();
+                } else {
+                    userUnionMap = userUnionService.listByTbPid(pids).stream()
+                            .collect(Collectors.toMap(MwUserUnion::getTbPid, MwUserUnion::getUid));
+                }
+
+                //交换父子订单编号，因为同一店铺下单多个商品，父订单号相同，导致只同步一个订单，
+                orders.stream().forEach(order -> {
+                    order.setParentId(order.getTradeParentId());
+                    order.setTradeParentId(Long.parseLong(order.getTradeId()));
+                    //淘宝渠道id 绑定用户
+                    if(order.getRelationId() != null) {
+                        Long uid = userUnionMap.get(order.getRelationId().toString());
+                        if(uid != null) {
+                            order.setUid(uid);
+                            //设置需要刷新今日预估的用户uid
+                            OrderLanded.landed(uid);
+                        }
+                    }
+                });
+
+                boolean saved = orderService.saveOrUpdateBatch(orders);
+
+                log.debug(saved? "淘宝订单保存成功": "淘宝订单保存失败");
+                return res.getData().getPosition_index();
+            }catch (Exception e) {
+                e.printStackTrace();
+                log.error("淘宝订单保存失败：{}", e);
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * 增加事务读已提交Read Committed 防止京店订单orderId重复导致的死锁
+     * 读数据时只能读到已经提交了的数据 （没有脏读）
+     * 写数据时只能覆盖已经提交了的数据 （没有脏写）
+     * */
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    public Integer saveJd(QueryJdParam param) {
+        //这里历史数据根据下单时间type=1查询 实时数据根据更新时间type=3查询
+        OrderRowQueryResult queryResult = jdService.order(param);
+
+        if(queryResult != null && queryResult.getData() != null && queryResult.getData().length > 0) {
+            OrderRowResp[] resps = queryResult.getData();
+
+            // 只同步当前站点(siteId)的订单，避免同一联盟账号下其他站点的订单混入
+            Long siteId = parseSiteId();
+            List<JunchenJdOrder> orders = JSON.parseArray(JSON.toJSONString(resps), JunchenJdOrder.class)
+                    .stream()
+                    .filter(order -> siteId == null || Objects.equals(order.getSiteId(), siteId))
+                    .collect(Collectors.toList());
+            // 过滤掉整页也要继续使用京东的 hasMore，不能提前停止分页。
+            if (orders.isEmpty()) {
+                return Boolean.TRUE.equals(queryResult.getHasMore()) ? 1 : 0;
+            }
+            //过滤父订单
+            Map<Long, Long> parentIdMap = new HashMap<>();
+
+            orders.stream().forEach(order -> {
+                //设置商品id
+                if(order.getGoodsInfo() != null) {
+                    order.getGoodsInfo().setGoodsId(order.getItemId());
+                }
+
+                if(order.getParentId() != 0) {
+                    parentIdMap.put(order.getParentId(), order.getParentId());
+                }
+                //京东skuid为空导致拆红包异常，暂时生成时间戳
+                if(order.getSkuId() == null) {
+                    order.setSkuId(System.currentTimeMillis());
+                }
+                //绑定用户
+                Long uid = OrderUtil.getJdOrderUser(order.getSubUnionId(), order.getPositionId());
+                if(uid > 0) {
+                    order.setUid(uid);
+                    //设置需要刷新今日预估的用户uid
+                    OrderLanded.landed(uid);
+                }
+            });
+
+            try {
+                //某些情况
+                boolean saved = jdOrderService.saveOrUpdateBatch(orders);
+                log.debug(saved? "京东订单保存成功": "京东订单保存失败");
+            }catch (Exception e) {
+                log.error("京东订单保存失败 {}", e);
+            }
+        }
+        if(queryResult != null && queryResult.getHasMore() != null) {
+            return queryResult.getHasMore() ? 1 : 0;
+        }
+        return 0;
+    }
+
+    /**
+     * 当前站点 id；未配置或配置非法时返回 null，表示不做站点过滤
+     */
+    private Long parseSiteId() {
+        String siteIdText = StringUtils.trim(jdConfig.getSiteId());
+        if (StringUtils.isBlank(siteIdText)) {
+            return null;
+        }
+        try {
+            return Long.valueOf(siteIdText);
+        } catch (NumberFormatException e) {
+            log.warn("京东 siteId 配置格式错误，本次跳过站点过滤 siteId={}", siteIdText);
+            return null;
+        }
+    }
+
+    protected boolean saveDy(QueryDyParam param) {
+        DyResVo res = dataokeService.queryDyList(param);
+        if(res != null && res.getData() != null && res.getData().getList() != null && !res.getData().getList().isEmpty()) {
+            ArrayList<JunchenDyOrder> orders = res.getData().getList();
+            orders.forEach(dyOrder -> {
+                //773026_8_0200 中间的是用户id
+                Long uid = OrderUtil.getDyOrderUser(dyOrder.getExternalInfo());
+                if(uid > 0) {
+                    dyOrder.setUid(uid);
+                    //设置需要刷新今日预估的用户uid
+                    OrderLanded.landed(uid);
+                }
+            });
+            boolean saved = dyOrderService.saveOrUpdateBatch(orders);
+
+            log.debug(saved? "抖音订单保存成功": "抖音订单保存失败");
+            return res.getData().getTotal() > param.getPage()*param.getSize();
+        }
+
+        return false;
+    }
+
+
+    protected Integer saveDyKu(QueryDyKuParam param) {
+        DyKuResVo res = null;
+        try {
+            res = kuService.dyLifeOrder(param);
+        }catch (Exception e) {
+            log.error("保存抖音库本地生活订单报错：{}", e);
+            return 0;
+        }
+        if(res != null && res.getCode() == 200 && !CollectionUtils.isEmpty(res.getData())) {
+            ArrayList<JunchenDyKuOrder> kuOrders = res.getData();
+            List<JunchenDyOrder> orders = kuOrders.stream().map(dyKuOrder-> dyKuOrder.convert()).collect(Collectors.toList());
+            orders.forEach(dyOrder -> {
+                //773026_8_0200 中间的是用户id
+                Long uid = OrderUtil.getDyOrderUser(dyOrder.getExternalInfo());
+                if(uid > 0) {
+                    dyOrder.setUid(uid);
+                    //设置需要刷新今日预估的用户uid
+                    OrderLanded.landed(uid);
+                }
+            });
+            boolean saved = dyOrderService.saveOrUpdateBatch(orders);
+
+            log.debug(saved? "抖音库订单保存成功": "抖音库订单保存失败");
+            return res.getMinId();
+        }
+
+        return 0;
+    }
+
+    protected String savePdd(QueryPddParam param) {
+        PddDdkOrderListRangeGetResponse res = pddService.queryPddOrderList(param);
+        if(res != null
+                && res.getOrderListGetResponse() != null
+                && res.getOrderListGetResponse().getOrderList() != null
+                && !res.getOrderListGetResponse().getOrderList().isEmpty()) {
+            List<PddDdkOrderListRangeGetResponse.OrderListGetResponseOrderListItem> orders =
+                    res.getOrderListGetResponse().getOrderList();
+            List<PddDdkOrderListRangeGetResponse.OrderListGetResponseOrderListItem> filteredOrders =
+                    orders.stream().filter(order -> Objects.equals(order.getPId(), pddConfig.getPid())).collect(Collectors.toList());
+            if(filteredOrders.isEmpty()) {
+                // 本页订单都不属于当前 pid 时不能直接结束，否则后续页的归属订单会漏采；
+                // 游标为空或与本次请求游标相同说明已翻到底，避免死循环
+                String lastOrderId = res.getOrderListGetResponse().getLastOrderId();
+                return StringUtils.isNotBlank(lastOrderId) && !Objects.equals(lastOrderId, param.getLastOrderId())
+                        ? lastOrderId : null;
+            }
+            //todo 由于拼多多订单时间为秒，存入数据库后显示1970年，目前手动乘以1000 后期优化
+            List<OrderListGetResponseOrderListDTO> orderDTOS = generator.convert(filteredOrders, OrderListGetResponseOrderListDTO.class);
+            orderDTOS = orderDTOS.stream().map(o->{
+                if(o.getOrderCreateTime() != null) {
+                    o.setOrderCreateTime(o.getOrderCreateTime()*1000);
+                }
+                if(o.getOrderGroupSuccessTime() != null) {
+                    o.setOrderGroupSuccessTime(o.getOrderGroupSuccessTime()*1000);
+                }
+                if(o.getOrderModifyAt() != null) {
+                    o.setOrderModifyAt(o.getOrderModifyAt()*1000);
+                }
+                if(o.getOrderPayTime() != null) {
+                    o.setOrderPayTime(o.getOrderPayTime()*1000);
+                }
+                if(o.getOrderReceiveTime() != null) {
+                    o.setOrderReceiveTime(o.getOrderReceiveTime()*1000);
+                }
+                if(o.getOrderSettleTime() != null) {
+                    o.setOrderSettleTime(o.getOrderSettleTime()*1000);
+                }
+                if(o.getOrderVerifyTime() != null) {
+                    o.setOrderVerifyTime(o.getOrderVerifyTime()*1000);
+                }
+                return o;
+            }).collect(Collectors.toList());
+            List<JunchenPddOrder> pddOrders = generator.convert(orderDTOS, JunchenPddOrder.class);
+            //订单绑定用户
+            pddOrders.forEach(pddOrder -> {
+                //拼多多授权后customParams格式为{"uid":"55"}，未授权为pid，解析报错
+                String customParams = pddOrder.getCustomParameters();
+                if(StringUtils.isBlank(customParams)) {
+                    return;
+                }
+                try{
+                    JSONObject obj = JSON.parseObject(customParams);
+                    Long uid = Long.parseLong(obj.getString(pddConfig.getParamPrefix()));
+                    if(uid != null && uid > 0) {
+                        pddOrder.setUid(uid);
+                        //设置需要刷新今日预估的用户uid
+                        OrderLanded.landed(uid);
+                    }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            boolean saved = pddOrderService.saveOrUpdateBatch(pddOrders);
+            log.debug(saved? "拼多多订单保存成功": "拼多多订单保存失败");
+            return res.getOrderListGetResponse().getLastOrderId();
+
+        }
+        return null;
+
+    }
+
+    protected boolean saveVip(QueryVipParam param) {
+        VipResVo res = dataokeService.queryVipList(param);
+        if(res != null && res.getData() != null && res.getData().getOrderInfoList() != null && !res.getData().getOrderInfoList().isEmpty()) {
+            VipDataVo data = res.getData();
+            ArrayList<JunchenVipOrder> orders = data.getOrderInfoList();
+            //绑定用户
+            List<JunchenVipOrder> filterOrders = orders.stream().filter(
+                    vipOrder -> vipOrder.getStatParam() != null && vipOrder.getStatParam().startsWith(VIP_UID_PREFIX))
+                    .collect(Collectors.toList());
+            if(filterOrders.isEmpty()) {
+                // 本页没有当前前缀的订单时，仍按 total 判断是否继续翻页，避免漏单
+                return data.getTotal() > data.getPageSize() * data.getPage();
+            }
+            filterOrders.forEach(vipOrder -> {
+                Long uid = OrderUtil.getVipOrderUser(vipOrder.getStatParam());
+                if(uid > 0) {
+                    vipOrder.setUid(uid);
+                    //设置需要刷新今日预估的用户uid
+                    OrderLanded.landed(uid);
+                }
+                if(!CollectionUtils.isEmpty(vipOrder.getDetailList())) {
+                    VipOrderDetailDto vipOrderDetailDto = JSON.parseObject(JSON.toJSONString(vipOrder.getDetailList().get(0)), VipOrderDetailDto.class);
+                    Double rate = Double.parseDouble(vipOrderDetailDto.getCommissionRate());
+                    vipOrder.setCommissionRate(rate);
+                }
+            });
+            boolean saved = vipOrderService.saveOrUpdateBatch(filterOrders);
+            log.debug(saved? "唯品会订单保存成功": "唯品会订单保存失败");
+            return data.getTotal() > data.getPageSize() * data.getPage();
+
+        }
+
+        return false;
+    }
+
+
+
+    private MeituanOrderParam initParam(QueryMtParam param) {
+        MeituanOrderParam objParam = new MeituanOrderParam();
+        objParam.setScrollId(param.getScrollId());
+        if(param.getSize() != null) {
+            objParam.setLimit(param.getSize());
+        }
+//        if(param.getQueryType() != null) {
+//            objParam.put("queryType", param.getQueryType());
+//        }
+        if(param.getStartTime() != null) {
+            objParam.setStartTime(param.getStartTime().atZone(ZoneId.systemDefault()).toEpochSecond());
+        }
+
+        if(param.getEndTime() != null) {
+            objParam.setEndTime(param.getEndTime().atZone(ZoneId.systemDefault()).toEpochSecond());
+        }
+        if(param.getPlatform() != null) {
+            objParam.setPlatform(param.getPlatform());
+        }
+        if(!CollectionUtils.isEmpty(param.getBusinessLine())) {
+            objParam.setBusinessLine(param.getBusinessLine());
+        }
+        objParam.setScrollId(param.getScrollId());
+        return objParam;
+    }
+
+    private String saveMtOrder(MtResVo res) {
+        if(res != null && res.getCode() != null && res.getCode()==200
+                && res.getMsg() != null
+                && !CollectionUtils.isEmpty(res.getMsg().getRecords())) {
+            List<JunchenMtOrder> orders = res.getMsg().getRecords();
+            orders = orders.stream().filter(order -> {
+                //cps和cpa订单有重复，然后cpatype为-1的订单佣金不正常，暂时过滤掉，暂未找到原因
+                if(order.getCpaType() != null && order.getCpaType() == -1) {
+                    return false;
+                }
+                return getMtOrderUid(order) != null;
+            }).collect(Collectors.toList());
+            if(orders.isEmpty()) {
+                return res.getMsg().getPositionIndex();
+            }
+            //订单绑定用户
+            orders.forEach(order -> {
+                if(order.getUniqueItemId()==null) {
+                    if(order.getItemId() != null) {
+                        order.setUniqueItemId(order.getItemId());
+                    } else {
+                        order.setUniqueItemId(order.getOrderId());
+                    }
+                }
+                Long uid = getMtOrderUid(order);
+                if (uid != null && uid > 0) {
+                    order.setUid(uid);
+                    OrderLanded.landed(uid);
+                }
+            });
+            boolean saved = mtOrderService.saveOrUpdateBatch(orders);
+            log.debug(saved? "美团订单保存成功": "美团订单保存失败");
+            return res.getMsg().getPositionIndex();
+
+        }
+        return null;
+    }
+
+    private Long getMtOrderUid(JunchenMtOrder order) {
+        if (StringUtils.isNotBlank(order.getSid())) {
+            return MeituanSidUtil.parse(order.getSid());
+        }
+        // 兼容旧接口的加密 utmMedium，仅官方 sid 缺失时使用。
+        if (StringUtils.isBlank(order.getUtmMedium())) {
+            return null;
+        }
+        return MeituanSidUtil.parse(MeituanUtil.decryptHex(order.getUtmMedium(), meituanConfig.getAppKey()));
+    }
+
+    protected String saveMtCPS(QueryMtParam param) {
+        MeituanOrderParam objParam = initParam(param);
+        MtResVo res = meituanService.order(objParam);
+        saveMtOrder(res);
+        return res != null && res.getMsg() != null ? res.getMsg().getPositionIndex() : null;
+    }
+
+
+    protected Integer saveEleKu(QueryEleKuParam param) {
+        EleKuResVo res = kuService.eleOrder(param);
+        if(res != null && res.getCode() == 200 && !CollectionUtils.isEmpty(res.getData())) {
+            ArrayList<JunchenEleKuOrder> eleOrders = res.getData();
+            List<JunchenEleOrder> orders = eleOrders.stream().map(dyKuOrder-> dyKuOrder.convert()).collect(Collectors.toList());
+            orders.forEach(dyOrder -> {
+                if(StringUtils.isNotBlank(dyOrder.getChannelCode())) {
+                    try {
+                        Long uid = Long.parseLong(dyOrder.getChannelCode());
+                        if(uid > 0) {
+                            dyOrder.setUid(uid);
+                            //设置需要刷新今日预估的用户uid
+                            OrderLanded.landed(uid);
+                        }
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            });
+            boolean saved = eleOrderService.saveOrUpdateBatch(orders);
+
+            log.debug(saved? "饿了么库订单保存成功": "饿了么库订单保存失败");
+            return res.getMinId();
+        }
+
+        return 0;
+    }
+
+    /**
+     * 快手订单采集（工单 06）：参照 saveEleKu，订单复用 mw_order_dy 表。
+     *
+     * @return 下一页 min_id 游标；≤0 表示没有更多订单
+     */
+    public Integer saveKs(QueryKsOrderParam param) {
+        KsOrderResVo res;
+        try {
+            res = kuService.orderList(param);
+        } catch (Exception e) {
+            log.error("快手订单拉取失败：{}", e.getMessage());
+            return 0;
+        }
+        if (res != null && KuService.isKsSuccess(res.getCode()) && !CollectionUtils.isEmpty(res.getData())) {
+            List<JunchenDyOrder> orders = res.getData().stream()
+                    .map(JunchenKsKuOrder::convert)
+                    .collect(Collectors.toList());
+            orders.forEach(order -> {
+                // 复用现有 external_info 归因机制（773026_<uid>_0200 中间段为 uid）
+                Long uid = OrderUtil.getDyOrderUser(order.getExternalInfo());
+                if (uid != null && uid > 0) {
+                    order.setUid(uid);
+                    OrderLanded.landed(uid);
+                }
+            });
+            boolean saved = dyOrderService.saveOrUpdateBatch(orders);
+            log.debug(saved ? "快手订单保存成功" : "快手订单保存失败");
+            return res.getMinId();
+        }
+        return 0;
+    }
+
+    /** 淘宝更高佣订单拉取与落库，复用 mw_order_tb 与现有分佣/冲正链路。 */
+    public Integer saveTbLive(QueryTbLiveOrderParam param) {
+        TbLiveOrderResVo res;
+        try {
+            res = kuService.tbLiveOrderList(param);
+        } catch (Exception e) {
+            log.error("淘宝更高佣订单拉取失败：{}", e.getMessage());
+            return 0;
+        }
+        if (res != null && KuService.isKsSuccess(res.getCode()) && !CollectionUtils.isEmpty(res.getData())) {
+            List<JunchenTbOrder> orders = res.getData().stream()
+                    .map(JunchenTbLiveOrder::convert)
+                    .collect(Collectors.toList());
+            orders.stream().filter(o -> o.getUid() != null && o.getUid() > 0)
+                    .forEach(o -> OrderLanded.landed(o.getUid()));
+            orderService.saveOrUpdateBatch(orders);
+            log.debug("淘宝更高佣订单保存 {} 条", orders.size());
+            return res.getMinId();
+        }
+        return 0;
+    }
+
+    /** 闲鱼订单拉取与落库，复用 mw_order_tb 与现有分佣/冲正链路。 */
+    public Integer saveIdle(QueryIdleOrderParam param) {
+        IdleOrderResVo res;
+        try {
+            res = kuService.idleOrderList(param);
+        } catch (Exception e) {
+            log.error("闲鱼订单拉取失败：{}", e.getMessage());
+            return 0;
+        }
+        if (res != null && KuService.isKsSuccess(res.getCode()) && !CollectionUtils.isEmpty(res.getData())) {
+            List<JunchenTbOrder> orders = res.getData().stream()
+                    .map(JunchenIdleOrder::convert)
+                    .collect(Collectors.toList());
+            orders.stream().filter(o -> o.getUid() != null && o.getUid() > 0)
+                    .forEach(o -> OrderLanded.landed(o.getUid()));
+            orderService.saveOrUpdateBatch(orders);
+            log.debug("闲鱼订单保存 {} 条", orders.size());
+            return res.getMinId();
+        }
+        return 0;
+    }
+}

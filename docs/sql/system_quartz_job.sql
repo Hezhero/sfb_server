@@ -14,7 +14,7 @@
 -- 会员过期等等会静默失效，且不会有任何报错，只在业务上表现为"一条订单都不回流"。
 --
 -- 【任务类清单说明】
--- mshop-admin/src/main/java/com/mailvor/modules/quartz/task/ 下共 39 个 .java，
+-- mshop-admin/src/main/java/com/junchen/modules/quartz/task/ 下共 39 个 .java，
 -- 但其中 OrderTask 是**基类**（只提供 saveTb/saveJd/savePdd 等落库方法，
 -- 没有 run 方法，不能注册成任务）。所以可注册任务是 **38 个**。
 -- 本脚本录入 38 条。

@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/10.server-build.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/10.server-build.html
 > 抓取时间: 2026-10-29 22:00:07
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # 后端部署
 
@@ -62,4 +62,4 @@ server {
 
 ## 4. 联调检查
 
-确认实际启用的 profile、数据库与 Redis 连接正确，再检查管理端登录、APP 分类与配置、第三方回调和定时订单采集。Redis 命令超时与 APP HTTP 超时是不同层级，排查见[常见问题](https://www.mailvor.com/02.开源版本/01.开发文档/70.other-prepare.html)。
+确认实际启用的 profile、数据库与 Redis 连接正确，再检查管理端登录、APP 分类与配置、第三方回调和定时订单采集。Redis 命令超时与 APP HTTP 超时是不同层级，排查见[常见问题](https://syh.hzhero.cn/02.开源版本/01.开发文档/70.other-prepare.html)。

@@ -1,0 +1,47 @@
+package com.junchen.modules.tk.constants;
+
+/**
+ * @projectName:dtk-items-openapi
+ * @createTime: 2019年11月28日14:13:21
+ * @description:
+ */
+public class TkConstants {
+
+    public static volatile String kuCmsUrl;
+    //da cms start
+    public static final String CMS_PREFIX = "https://cmscg.dataoke.com/cms-v2";
+    public static final String API_PREFIX = "https://openapi.dataoke.com/api";
+    public static final String CMS_API_PREFIX = "https://dtkapi.ffquan.cn/dtk_go_app_api/v1";
+
+    //爆款验货 分类
+    public static final String CHECK_CATE = CMS_PREFIX + "/column-conf?id=606&preview=";
+
+    public static final String RANKING_CATE = CMS_API_PREFIX + "/page-goods-ranking-cate";
+
+    public static final String NINE_CATE = CMS_API_PREFIX + "/page-goods-nine-cate";
+    public static final String NINE_TOP = CMS_API_PREFIX + "/page-goods-nine-top";
+    // 第三方app_key原为硬编码（aqoadw），改为运行时从配置注入；通过 setter 设置，
+    // 未设置时为空串，相关端点会明确失败而不是带着源码里的硬编码值静默工作。
+    public static volatile String thirdPartyAppKey = "";
+    public static final String NINE_LIST_TPL = CMS_API_PREFIX + "/page-goods-nine?aid=0&cid=%s&pageNo=%s&pageSize=%s&app_key=%s";
+    public static final String HOME_DATA_TOP_CATE = "cache:home:top:cate";
+    public static final String HOME_DATA_BRAND_LIST = "cache:home:brandList";
+    // 首页卡片字段精简后启用新缓存，避免命中已有的完整商品响应。
+    public static final String HOME_DATA_HOT = "cache:home:hot:v2";
+    public static final String HOME_DATA_DDQ = "cache:home:ddq:v2";
+    public static final String HOME_DATA_BANNER = "cache:home:banner";
+
+    /**
+     * 大家都在买
+     * */
+    public static final String HOME_DATA_EVERY = "cache:home:every";
+
+    public static final String HOME_DATA_CATEGORY_TB = "cache:home:category:tb";
+    public static final String HOME_DATA_CATEGORY_PDD = "cache:home:category:pdd";
+
+    public static final String HOME_DATA_TILES = "cache:home:tiles";
+
+
+    public static final Long HOME_DATA_EXPIRED = 86400L;
+
+}

@@ -6,7 +6,7 @@
 
 **三盈会**
 本项目的统一品牌名。全拼 `sanyinghui`，简写 `syh`。
-此前品牌名为「苏分宝」，属历史遗留，按本轮决策统一替换为「三盈会」。
+此前品牌名为「三盈会」，属历史遗留，按本轮决策统一替换为「三盈会」。
 注意：法律权利主体由原许可方变更为项目自有（详见 ADR-0001）。
 
 **syh**
@@ -15,7 +15,7 @@
 
 **junchen**
 Java 包名根（`com.junchen`）。注意：这是代码组织命名空间，与品牌名 `sanyinghui` 不同——
-`com.mailvor` → `com.junchen`，`com.mailvor.sufenbao` → `com.junchen.sanyinghui`。
+`com.junchen` → `com.junchen`，`com.junchen.sanyinghui` → `com.junchen.sanyinghui`。
 
 ## 业务术语
 

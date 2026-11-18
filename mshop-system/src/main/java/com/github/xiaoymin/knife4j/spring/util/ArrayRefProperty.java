@@ -1,6 +1,6 @@
 /**
  * Copyright (C) 2018-2023
- * All rights reserved, Designed By www.mailvor.com
+ * All rights reserved, Designed By syh.hzhero.cn
  */
 package com.github.xiaoymin.knife4j.spring.util;
 import io.swagger.models.properties.ArrayProperty;

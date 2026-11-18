@@ -1,0 +1,221 @@
+package com.junchen.regression;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.junchen.modules.dataoke.rest.HaodankuController;
+import com.junchen.modules.tk.service.KuService;
+import org.springframework.web.client.RestTemplate;
+import com.junchen.config.RedisConfig;
+import com.junchen.modules.dataoke.rest.DataokeController;
+import com.junchen.modules.shop.domain.MwSystemConfig;
+import com.junchen.modules.shop.service.impl.MwSystemConfigServiceImpl;
+import com.junchen.modules.shop.service.mapper.SystemConfigMapper;
+import com.junchen.modules.tk.service.DataokeService;
+import com.junchen.utils.RedisUtils;
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.SocketOptions;
+import org.junit.Test;
+import org.springframework.dao.QueryTimeoutException;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.Duration;
+
+import static com.junchen.modules.tk.constants.TkConstants.HOME_DATA_CATEGORY_TB;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+public class RedisCacheFallbackTest {
+    private final RedisUtils redis = mock(RedisUtils.class);
+    private final DataokeService upstream = mock(DataokeService.class);
+
+    private DataokeController categoryController() {
+        DataokeController controller = new DataokeController();
+        ReflectionTestUtils.setField(controller, "redisUtils", redis);
+        ReflectionTestUtils.setField(controller, "service", upstream);
+        return controller;
+    }
+
+    @Test
+    public void categoryCacheHitDoesNotCallUpstream() {
+        JSONObject cached = new JSONObject();
+        when(redis.getCache(HOME_DATA_CATEGORY_TB)).thenReturn(cached);
+        assertSame(cached, categoryController().getCategory());
+        verifyNoInteractions(upstream);
+    }
+
+    @Test
+    public void categoryCacheTimeoutUsesUpstreamWithoutRetryingRedis() {
+        JSONObject response = new JSONObject();
+        when(redis.getCache(HOME_DATA_CATEGORY_TB)).thenThrow(new QueryTimeoutException("timeout"));
+        when(upstream.getCategory()).thenReturn(response);
+        assertSame(response, categoryController().getCategory());
+        verify(redis, never()).setCache(anyString(), any(), anyLong());
+    }
+
+    @Test
+    public void categoryCacheMissKeepsExistingCacheLifetime() {
+        JSONObject response = new JSONObject();
+        when(upstream.getCategory()).thenReturn(response);
+        assertSame(response, categoryController().getCategory());
+        verify(redis).setCache(HOME_DATA_CATEGORY_TB, response, 24 * 3600);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void upstreamFailureIsNotConvertedToEmptySuccess() {
+        when(redis.getCache(HOME_DATA_CATEGORY_TB)).thenThrow(new QueryTimeoutException("timeout"));
+        when(upstream.getCategory()).thenThrow(new IllegalStateException("upstream unavailable"));
+        categoryController().getCategory();
+    }
+
+    @Test
+    public void configurationCacheTimeoutFallsBackToDatabase() {
+        when(redis.getCache("commission")).thenThrow(new QueryTimeoutException("timeout"));
+        SystemConfigMapper mapper = mock(SystemConfigMapper.class);
+        MwSystemConfig record = new MwSystemConfig();
+        record.setValue("configured-value");
+        when(mapper.selectOne(any())).thenReturn(record);
+        MwSystemConfigServiceImpl service = new MwSystemConfigServiceImpl(null, redis);
+        ReflectionTestUtils.setField(service, "baseMapper", mapper);
+        assertEquals("configured-value", service.getData("commission"));
+    }
+
+    @Test
+    public void configurationCacheHitDoesNotCallDatabase() {
+        when(redis.getCache("commission")).thenReturn("cached-value");
+        SystemConfigMapper mapper = mock(SystemConfigMapper.class);
+        MwSystemConfigServiceImpl service = new MwSystemConfigServiceImpl(null, redis);
+        ReflectionTestUtils.setField(service, "baseMapper", mapper);
+        assertEquals("cached-value", service.getData("commission"));
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void stringLookupUsesSingleGetAndHandlesExpiredKey() {
+        RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
+        ValueOperations<Object, Object> values = mock(ValueOperations.class);
+        when(template.opsForValue()).thenReturn(values);
+        RedisUtils utils = new RedisUtils(template);
+        assertEquals("", utils.getY("expired"));
+        when(values.get("present")).thenReturn(123);
+        assertEquals("123", utils.getY("present"));
+        assertEquals("", utils.getY(null));
+        verify(template, never()).hasKey(any());
+        verify(values).get("expired");
+        verify(values).get("present");
+        verifyNoMoreInteractions(values);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void optionalCacheFailureSkipsRepeatedReadsAndWritesButKeepsStrictRedis() {
+        RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
+        ValueOperations<Object, Object> values = mock(ValueOperations.class);
+        when(template.opsForValue()).thenReturn(values);
+        when(values.get("first")).thenThrow(new QueryTimeoutException("timeout"));
+        RedisUtils utils = new RedisUtils(template);
+        assertNull(utils.getCache("first"));
+        assertNull(utils.getCache("next"));
+        assertFalse(utils.setCache("next", "value", 60));
+        verify(values, never()).get("next");
+        verify(values, never()).set(any(), any(), anyLong(), any());
+        when(values.get("session")).thenReturn("token");
+        assertEquals("token", utils.get("session"));
+        ReflectionTestUtils.setField(utils, "optionalCacheRetryAtNanos", System.nanoTime() - 1);
+        when(values.get("recovered")).thenReturn("value");
+        assertEquals("value", utils.getCache("recovered"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void optionalCacheWriteFailureAlsoStartsBackoff() {
+        RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
+        ValueOperations<Object, Object> values = mock(ValueOperations.class);
+        when(template.opsForValue()).thenReturn(values);
+        doThrow(new QueryTimeoutException("timeout")).when(values)
+                .set("key", "value", 60, java.util.concurrent.TimeUnit.SECONDS);
+        RedisUtils utils = new RedisUtils(template);
+        assertFalse(utils.setCache("key", "value", 60));
+        assertNull(utils.getCache("next"));
+        verify(values, never()).get("next");
+    }
+
+    @Test
+    public void bannerAndTilesFallBackToUpstreamWhenOptionalCacheIsSkipped() {
+        HaodankuController controller = new HaodankuController();
+        RestTemplate rest = mock(RestTemplate.class);
+        KuService ku = mock(KuService.class);
+        ReflectionTestUtils.setField(controller, "redisUtils", redis);
+        ReflectionTestUtils.setField(controller, "restTemplate", rest);
+        ReflectionTestUtils.setField(controller, "kuService", ku);
+        when(ku.getKuCid()).thenReturn("test-cid");
+        JSONArray banners = new JSONArray();
+        JSONArray tiles = new JSONArray();
+        JSONObject payload = new JSONObject();
+        payload.put("banners", banners);
+        payload.put("tile_long", tiles);
+        JSONObject response = new JSONObject();
+        response.put("data", payload);
+        when(rest.getForObject(anyString(), eq(JSONObject.class))).thenReturn(response);
+        assertSame(banners, controller.banners());
+        assertSame(tiles, controller.tiles());
+    }
+
+    @Test
+    public void appConfigurationUsesDatabaseWhenOptionalCacheIsSkipped() {
+        SystemConfigMapper mapper = mock(SystemConfigMapper.class);
+        MwSystemConfig record = new MwSystemConfig();
+        record.setValue("{}");
+        when(mapper.selectOne(any())).thenReturn(record);
+        MwSystemConfigServiceImpl service = new MwSystemConfigServiceImpl(null, redis);
+        ReflectionTestUtils.setField(service, "baseMapper", mapper);
+        assertNotNull(service.getAppDataConfig());
+        verify(mapper).selectOne(any());
+    }
+
+    @Test
+    public void disconnectedRedisRejectsCommandsAndReconnects() {
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder();
+        new RedisConfig().lettuceConnectionCustomizer().customize(builder);
+        ClientOptions options = builder.build().getClientOptions().get();
+        assertTrue(options.isAutoReconnect());
+        assertTrue(options.getSocketOptions().isKeepAlive());
+        assertEquals(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS, options.getDisconnectedBehavior());
+    }
+
+    /**
+     * keepAlive(true) 只打开 SO_KEEPALIVE 开关，Lettuce 不会写入探测参数，内核沿用操作系统默认值
+     * （实测 TCP_KEEPIDLE=7200s），远大于 NAT 空闲会话老化时间（实测约 250s），连接会变成半开黑洞。
+     * 必须用细粒度 KeepAliveOptions 重载，且 idle 要显著小于老化阈值。
+     */
+    @Test
+    public void keepAliveProbesBeforeNatSessionExpires() {
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder();
+        new RedisConfig().lettuceConnectionCustomizer().customize(builder);
+        SocketOptions.KeepAliveOptions keepAlive =
+                builder.build().getClientOptions().get().getSocketOptions().getKeepAlive();
+        assertTrue(keepAlive.isEnabled());
+        assertEquals(Duration.ofSeconds(60), keepAlive.getIdle());
+        assertEquals(Duration.ofSeconds(15), keepAlive.getInterval());
+        assertEquals(3, keepAlive.getCount());
+        assertTrue("keepalive 首次探测必须早于 NAT 会话老化（实测约 250s）",
+                keepAlive.getIdle().getSeconds() < 250);
+    }
+
+    /**
+     * RedisConfig 整体替换 ClientOptions 会覆盖 spring-data-redis 构造时默认注入的
+     * TimeoutOptions.enabled()；不显式设置则回落为 timeoutCommands=false，
+     * CommandExpiryWriter 不会被安装，键过期订阅等异步路径将失去命令超时保护。
+     */
+    @Test
+    public void clientOptionsKeepCommandTimeoutEnabled() {
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder();
+        new RedisConfig().lettuceConnectionCustomizer().customize(builder);
+        ClientOptions options = builder.build().getClientOptions().get();
+        assertTrue(options.getTimeoutOptions().isTimeoutCommands());
+    }
+}

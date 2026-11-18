@@ -49,7 +49,7 @@ if [ "$normalized" -gt 0 ]; then
 fi
 
 # ---- 3. 订单实体加字段 → DDL 随行（提示，不阻断）----
-order_domain_changed=$(printf '%s\n' "$staged" | grep -E 'tk/domain/(TkOrder|Mailvor.*Order)\.java$' || true)
+order_domain_changed=$(printf '%s\n' "$staged" | grep -E 'tk/domain/(TkOrder|Junchen.*Order)\.java$' || true)
 if [ -n "$order_domain_changed" ]; then
   ddl_changed=$(printf '%s\n' "$staged" | grep -E 'docs/sql/.*\.sql$' || true)
   if [ -z "$ddl_changed" ]; then

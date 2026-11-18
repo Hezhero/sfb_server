@@ -1,4 +1,4 @@
-package com.mailvor.modules.${package.ModuleName}.web.param;
+package com.junchen.modules.${package.ModuleName}.web.param;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Data;

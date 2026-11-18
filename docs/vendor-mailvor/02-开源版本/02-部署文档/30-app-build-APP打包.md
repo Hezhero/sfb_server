@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/30.app-build.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/30.app-build.html
 > 抓取时间: 2026-10-29 22:00:08
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # app打包
 
@@ -16,7 +16,7 @@ static final baseHost = kDebugMode
     : 'https://api.example.com';
 ```
 
-客户端会追加 `/api`。确认包名、图标、启动图、签名、权限、第三方账号和服务端配置已同步，见 [APP 准备](https://www.mailvor.com/02.开源版本/01.开发文档/30.app-prepare.html)。
+客户端会追加 `/api`。确认包名、图标、启动图、签名、权限、第三方账号和服务端配置已同步，见 [APP 准备](https://syh.hzhero.cn/02.开源版本/01.开发文档/30.app-prepare.html)。
 
 ## 2. Android 打包
 
@@ -52,4 +52,4 @@ flutter build ios --debug --no-codesign
 
 已有工作区若锁定了旧人脸核验原生 SDK，在 `ios/` 执行 `pod update --no-repo-update` 后重新构建。CocoaPods 与插件安装脚本应使用同一套 Ruby 环境，微信 / 支付宝相关脚本需要能够加载 `plist` gem。
 
-Windows 可开发和打包 Android；本节 iOS 本地打包需要 macOS。商业版在线打包是另一项能力，见[版本对比](https://www.mailvor.com/01.介绍/30.functional.html)。
+Windows 可开发和打包 Android；本节 iOS 本地打包需要 macOS。商业版在线打包是另一项能力，见[版本对比](https://syh.hzhero.cn/01.介绍/30.functional.html)。

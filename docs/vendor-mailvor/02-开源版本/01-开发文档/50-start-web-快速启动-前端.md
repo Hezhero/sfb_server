@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/50.start-web.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/50.start-web.html
 > 抓取时间: 2026-10-29 22:00:06
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # 快速启动（前端项目）
 
@@ -44,4 +44,4 @@ npm run dev
 | `npm run build:prod` | 使用 `.env.prod` 构建生产包 |
 | `npm run preview` | 本地预览构建结果 |
 
-生产部署见[前端部署](https://www.mailvor.com/02.开源版本/02.部署文档/20.web-build.html)。旧 Vue 2 文档中的 `VUE_APP_*` 配置不适用于当前 Vite 项目。
+生产部署见[前端部署](https://syh.hzhero.cn/02.开源版本/02.部署文档/20.web-build.html)。旧 Vue 2 文档中的 `VUE_APP_*` 配置不适用于当前 Vite 项目。

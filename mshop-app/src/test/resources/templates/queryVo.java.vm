@@ -1,4 +1,4 @@
-package com.mailvor.modules.${package.ModuleName}.web.vo;
+package com.junchen.modules.${package.ModuleName}.web.vo;
 
 #if(${swagger2})
 import io.swagger.annotations.ApiModel;

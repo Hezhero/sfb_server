@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/60.start-app.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/01.%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/60.start-app.html
 > 抓取时间: 2026-10-29 22:00:06
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # 快速启动（APP项目）
 
@@ -42,7 +42,7 @@ static final baseHost = kDebugMode
 
 IP 与域名只是示例。真机使用手机可以访问的开发机 IP，不能填写手机自身的 `localhost` 或 `127.0.0.1`。客户端会追加 `/api`，`baseHost` 不要重复添加它，也不要连接管理端 `8001/admin`。
 
-包名、签名、微信、百川、极光等参数见 [APP 准备](https://www.mailvor.com/02.开源版本/01.开发文档/30.app-prepare.html)。
+包名、签名、微信、百川、极光等参数见 [APP 准备](https://syh.hzhero.cn/02.开源版本/01.开发文档/30.app-prepare.html)。
 
 ## 4. 运行与检查
 
@@ -58,4 +58,4 @@ flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos
 flutter test --no-pub test/single_flight_test.dart
 ```
 
-当前静态检查仍有历史 warning / info；上述参数不会忽略编译 error。iOS 首次运行先完成 `pod install` 并在 Xcode 中配置签名，详见[APP 打包](https://www.mailvor.com/02.开源版本/02.部署文档/30.app-build.html)。
+当前静态检查仍有历史 warning / info；上述参数不会忽略编译 error。iOS 首次运行先完成 `pod install` 并在 Xcode 中配置签名，详见[APP 打包](https://syh.hzhero.cn/02.开源版本/02.部署文档/30.app-build.html)。

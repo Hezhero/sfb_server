@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2018-2024
- * All rights reserved, Designed By www.mailvor.com
+ * All rights reserved, Designed By syh.hzhero.cn
  */
 package ${package}.service.mapper;
 
-import com.mailvor.base.BaseMapper;
+import com.junchen.base.BaseMapper;
 import ${package}.domain.${className};
 import ${package}.service.dto.${className}Dto;
 import org.mapstruct.Mapper;

@@ -1,6 +1,6 @@
-> 来源: https://www.mailvor.com/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/20.web-build.html
+> 来源: https://syh.hzhero.cn/02.%E5%BC%80%E6%BA%90%E7%89%88%E6%9C%AC/02.%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/20.web-build.html
 > 抓取时间: 2026-10-29 22:00:08
-> 版权归苏州迈沃通信有限公司所有，仅供本地部署参考，请勿外传
+> 版权归济南隽宸信息科技有限公司所有，仅供本地部署参考，请勿外传
 
 # 前端部署
 
@@ -64,4 +64,4 @@ server {
 - 登录请求进入 `mshop-admin` 的 `/admin/auth/...`，业务请求进入 `/admin/api/...`。
 - 管理端服务、数据库与 Redis 可用，菜单与权限已初始化。
 
-服务端部署见[后端部署](https://www.mailvor.com/02.开源版本/02.部署文档/10.server-build.html)。
+服务端部署见[后端部署](https://syh.hzhero.cn/02.开源版本/02.部署文档/10.server-build.html)。

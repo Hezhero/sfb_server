@@ -1,0 +1,375 @@
+/**
+ * Copyright (C) 2018-2024
+ * All rights reserved, Designed By syh.hzhero.cn
+ */
+package com.junchen.modules.shop.service.impl;
+
+import com.junchen.modules.tk.config.KuCmsAddress;
+import com.junchen.exception.BadRequestException;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.github.pagehelper.PageInfo;
+import com.junchen.common.service.impl.BaseServiceImpl;
+import com.junchen.common.utils.QueryHelpPlus;
+import com.junchen.dozer.service.IGenerator;
+import com.junchen.modules.activity.service.dto.MwExtractConfigDto;
+import com.junchen.modules.order.service.dto.OrderCheckConfigDto;
+import com.junchen.modules.shop.domain.MwSystemConfig;
+import com.junchen.modules.shop.service.MwSystemConfigService;
+import com.junchen.modules.shop.service.dto.MwSystemConfigDto;
+import com.junchen.modules.shop.service.dto.MwSystemConfigQueryCriteria;
+import com.junchen.modules.shop.service.dto.PayConfigDto;
+import com.junchen.modules.shop.service.mapper.SystemConfigMapper;
+import com.junchen.modules.tk.constants.TkConstants;
+import com.junchen.modules.user.config.AppDataConfig;
+import com.junchen.modules.user.config.HbUnlockConfig;
+import com.junchen.modules.utils.TkUtil;
+import com.junchen.utils.FileUtil;
+import com.junchen.utils.RedisUtils;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.junchen.constant.ShopConstants.APP_LOGIN_WHITELIST;
+import static com.junchen.constant.ShopConstants.MSHOP_USER_SHARE;
+import static com.junchen.constant.SystemConfigConstants.*;
+
+
+/**
+* @author huangyu
+* @date 2020-05-12
+*/
+@Slf4j
+@Service
+@AllArgsConstructor
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true, rollbackFor = Exception.class)
+public class MwSystemConfigServiceImpl extends BaseServiceImpl<SystemConfigMapper, MwSystemConfig> implements MwSystemConfigService {
+
+    private final IGenerator generator;
+    private final RedisUtils redisUtils;
+
+    /**
+     * 获取配置值
+     * @param name 配置名
+     * @return string
+     */
+    @Override
+    public String getData(String name) {
+        try {
+            Object cached = redisUtils.getCache(name);
+            String result = cached == null ? "" : cached.toString();
+            if (StrUtil.isNotBlank(result)) {
+                return result;
+            }
+        } catch (DataAccessException e) {
+            log.warn("配置缓存读取失败，改从数据库读取，key={}", name, e);
+        }
+
+        LambdaQueryWrapper<MwSystemConfig> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MwSystemConfig::getMenuName, name);
+        MwSystemConfig systemConfig = this.baseMapper.selectOne(wrapper);
+        if (systemConfig == null) {
+            return "";
+        }
+        return systemConfig.getValue();
+    }
+
+    @Override
+    //@Cacheable
+    public Map<String, Object> queryAll(MwSystemConfigQueryCriteria criteria, Pageable pageable) {
+        getPage(pageable);
+        PageInfo<MwSystemConfig> page = new PageInfo<>(queryAll(criteria));
+        Map<String, Object> map = new LinkedHashMap<>(2);
+        map.put("content", generator.convert(page.getList(), MwSystemConfigDto.class));
+        map.put("totalElements", page.getTotal());
+        return map;
+    }
+
+
+    @Override
+    //@Cacheable
+    public List<MwSystemConfig> queryAll(MwSystemConfigQueryCriteria criteria){
+        return baseMapper.selectList(QueryHelpPlus.getPredicate(MwSystemConfig.class, criteria));
+    }
+
+
+    @Override
+    public void download(List<MwSystemConfigDto> all, HttpServletResponse response) throws IOException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (MwSystemConfigDto mwSystemConfig : all) {
+            Map<String,Object> map = new LinkedHashMap<>();
+            map.put("字段名称", mwSystemConfig.getMenuName());
+            map.put("默认值", mwSystemConfig.getValue());
+            map.put("排序", mwSystemConfig.getSort());
+            map.put("是否隐藏", mwSystemConfig.getStatus());
+            list.add(map);
+        }
+        FileUtil.downloadExcel(list, response);
+    }
+
+    @Override
+    public MwSystemConfig findByKey(String key) {
+        return this.getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+    }
+
+    @Override
+    public Long getSpreadHbCount() {
+        String result = redisUtils.getY(SPREAD_HB_COUNT_CONFIG);
+        if (StrUtil.isNotBlank(result)) {
+            return Long.parseLong(result);
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,SPREAD_HB_COUNT_CONFIG));
+        if(config == null) {
+            return 2L;
+        }
+        redisUtils.set(SPREAD_HB_COUNT_CONFIG, config.getValue());
+        return Long.parseLong(config.getValue());
+    }
+
+    @Override
+    public OrderCheckConfigDto getOrderCheckConfig() {
+        String result = redisUtils.getY(ORDER_CHECK_CONFIG);
+        if (StrUtil.isNotBlank(result)) {
+            return JSON.parseObject(result, OrderCheckConfigDto.class);
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,ORDER_CHECK_CONFIG));
+        if(config == null) {
+            return new OrderCheckConfigDto();
+        }
+        redisUtils.set(ORDER_CHECK_CONFIG, config.getValue());
+        return JSON.parseObject(config.getValue(), OrderCheckConfigDto.class);
+    }
+
+    @Override
+    public HbUnlockConfig getHbUnlockConfig() {
+        String key = TkUtil.getMixedPlatformKey(HB_UNLOCK_CONFIG);
+        Object result = redisUtils.get(key);
+        if (result != null) {
+            return (HbUnlockConfig)result;
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        HbUnlockConfig res;
+        if(config == null) {
+            res = new HbUnlockConfig();
+        } else {
+            res = JSON.parseObject(config.getValue(), HbUnlockConfig.class);
+        }
+        redisUtils.set(key, res);
+        return res;
+    }
+
+    public void setHbUnlockConfig(HbUnlockConfig param) {
+        String key = TkUtil.getMixedPlatformKey(HB_UNLOCK_CONFIG);
+        MwSystemConfig systemConfig = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                        .eq(MwSystemConfig::getMenuName, key));
+        if(systemConfig == null) {
+            systemConfig = new MwSystemConfig();
+            systemConfig.setMenuName(key);
+        }
+        String value = JSON.toJSONString(param);
+        systemConfig.setValue(value);
+        redisUtils.set(key, param);
+        saveOrUpdate(systemConfig);
+    }
+
+    @Override
+    public PayConfigDto getAppPayConfig() {
+        String key = TkUtil.getMixedPlatformKey(PAY_CONFIG);
+        Object result = redisUtils.get(key);
+        if (result != null) {
+            return (PayConfigDto)result;
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        PayConfigDto configDto;
+        if(config == null) {
+            configDto = new PayConfigDto();
+        } else {
+            configDto = JSON.parseObject(config.getValue(), PayConfigDto.class);
+        }
+        redisUtils.set(key, configDto);
+        return configDto;
+    }
+
+    @Override
+    public void setAppPayConfig(PayConfigDto configDTO) {
+        String key = TkUtil.getMixedPlatformKey(PAY_CONFIG);
+
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        if(config == null) {
+            config = new MwSystemConfig();
+            config.setMenuName(key);
+        }
+        config.setValue(JSON.toJSONString(configDTO));
+        saveOrUpdate(config);
+        redisUtils.set(key, configDTO);
+    }
+
+    @Override
+    public MwExtractConfigDto getAppExtractConfig() {
+        String key = TkUtil.getMixedPlatformKey(EXTRACT_CONFIG);
+        Object result = redisUtils.get(key);
+        // 缓存里可能残留旧版本写入的 JSONObject（例如品牌/类名升级前的数据），
+        // 直接强转会抛 ClassCastException；类型不符时忽略缓存回源 DB 并刷新。
+        if (result instanceof MwExtractConfigDto) {
+            return (MwExtractConfigDto) result;
+        }
+        if (result != null) {
+            log.warn("提现配置缓存类型不匹配(key={})，忽略缓存回源", key);
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        MwExtractConfigDto res;
+        if(config == null) {
+            res = new MwExtractConfigDto();
+        } else {
+            res = JSON.parseObject(config.getValue(), MwExtractConfigDto.class);
+        }
+        redisUtils.set(key, res);
+        return res;
+    }
+
+
+
+
+
+    @Override
+    public AppDataConfig getAppDataConfig() {
+        String key = TkUtil.getMixedPlatformKey(HOME_DATA);
+        Object result = redisUtils.getCache(key);
+        if (result != null) {
+            return (AppDataConfig)result;
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        AppDataConfig res;
+        if(config == null) {
+            res = new AppDataConfig();
+        } else {
+            res = JSON.parseObject(config.getValue(), AppDataConfig.class);
+        }
+        redisUtils.setCache(key, res, 0);
+        return res;
+    }
+
+    public void setAppDataConfig(AppDataConfig param) {
+        try {
+            KuCmsAddress.parse(param.getKuCid());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+        param.setKuCid(param.getKuCid().trim());
+        String key = TkUtil.getMixedPlatformKey(HOME_DATA);
+        MwSystemConfig systemConfig = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName, key));
+        if(systemConfig == null) {
+            systemConfig = new MwSystemConfig();
+            systemConfig.setMenuName(key);
+        }
+        systemConfig.setValue(JSON.toJSONString(param));
+        TkConstants.kuCmsUrl = null;
+        redisUtils.set(key, param);
+        saveOrUpdate(systemConfig);
+    }
+
+
+    @Override
+    public List<String> getAppShareConfig() {
+
+        String key = TkUtil.getMixedPlatformKey(MSHOP_USER_SHARE);
+        List<Object> result = redisUtils.getList(key);
+        // redis 中 key 不存在时 range 返回空集合而非 null，需一并回源数据库（否则缓存失效后配置丢失）
+        if (result != null && !result.isEmpty()) {
+            return result.stream()
+                    .map(obj -> (String) obj) // 根据需求进行类型转换
+                    .collect(Collectors.toList());
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        List<String> res;
+        if(config == null || StrUtil.isBlank(config.getValue())) {
+            res = Collections.EMPTY_LIST;
+        } else {
+            res = JSON.parseObject(config.getValue(), List.class);
+        }
+        // 解析结果为空时归一为空集合，避免调用方 NPE
+        if (res == null) {
+            res = Collections.EMPTY_LIST;
+        }
+        redisUtils.setList(key, res);
+        return res;
+    }
+
+    public void setAppShareConfig(List<String> images){
+        String key = TkUtil.getMixedPlatformKey(MSHOP_USER_SHARE);
+        MwSystemConfig systemConfig = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName, key));
+        if(systemConfig == null) {
+            systemConfig = new MwSystemConfig();
+            systemConfig.setMenuName(key);
+        }
+        systemConfig.setValue(JSON.toJSONString(images));
+        redisUtils.setList(key, images);
+        saveOrUpdate(systemConfig);
+    }
+
+
+
+
+    @Override
+    public List<String> getAppLoginWhitelist() {
+
+        String key = TkUtil.getMixedPlatformKey(APP_LOGIN_WHITELIST);
+        List<Object> result = redisUtils.getList(key);
+        // 同上，缓存未命中（key 不存在或已被清空）时回源数据库并重建缓存
+        if (result != null && !result.isEmpty()) {
+            return result.stream()
+                    .map(obj -> (String) obj) // 根据需求进行类型转换
+                    .collect(Collectors.toList());
+        }
+        MwSystemConfig config = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName,key));
+        List<String> res;
+        if(config == null || StrUtil.isBlank(config.getValue())) {
+            res = Collections.EMPTY_LIST;
+        } else {
+            res = JSON.parseObject(config.getValue(), List.class);
+        }
+        // 同上
+        if (res == null) {
+            res = Collections.EMPTY_LIST;
+        }
+        redisUtils.setList(key, res);
+        return res;
+    }
+
+    @Override
+    public void setAppLoginWhiteList(List<String> whiteList){
+        String key = TkUtil.getMixedPlatformKey(APP_LOGIN_WHITELIST);
+        MwSystemConfig systemConfig = getOne(new LambdaQueryWrapper<MwSystemConfig>()
+                .eq(MwSystemConfig::getMenuName, key));
+        if(systemConfig == null) {
+            systemConfig = new MwSystemConfig();
+            systemConfig.setMenuName(key);
+        }
+        systemConfig.setValue(JSON.toJSONString(whiteList));
+        redisUtils.setList(key, whiteList);
+        saveOrUpdate(systemConfig);
+    }
+
+}

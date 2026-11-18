@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2018-2024
- * All rights reserved, Designed By www.mailvor.com
+ * All rights reserved, Designed By syh.hzhero.cn
  */
 package ${package}.rest;
 
-import com.mailvor.aop.log.Log;
+import com.junchen.aop.log.Log;
 import ${package}.domain.${className};
 import ${package}.service.${className}Service;
 import ${package}.service.dto.${className}QueryCriteria;

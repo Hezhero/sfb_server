@@ -1,6 +1,6 @@
 /**
 * Copyright (C) 2018-2021
-* All rights reserved, Designed By www.mailvor.com
+* All rights reserved, Designed By syh.hzhero.cn
 */
 package ${package}.service;
 
