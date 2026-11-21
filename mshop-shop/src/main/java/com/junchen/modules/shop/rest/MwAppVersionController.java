@@ -74,9 +74,9 @@ public class MwAppVersionController {
     @PreAuthorize("@el.check('admin','mwAppVersion:add')")
     public ResponseEntity<Object> create(@Validated @RequestBody MwAppVersion resources){
         //如果新增的版本是启用，需要关闭所有其他版本
-        if(resources.getEnable() == 1) {
+        if(Boolean.TRUE.equals(resources.getEnable())) {
             MwAppVersion appVersion = new MwAppVersion();
-            appVersion.setEnable(0);
+            appVersion.setEnable(false);
             appVersion.setPlatformName(PAY_NAME);
             versionService.update(appVersion, new LambdaQueryWrapper<>());
         }
@@ -92,10 +92,10 @@ public class MwAppVersionController {
     @PreAuthorize("@el.check('admin','mwAppVersion:edit')")
     public ResponseEntity<Object> update(@Validated @RequestBody MwAppVersion resources){
         //如果编辑的版本是启用，需要关闭所有其他版本
-        if(resources.getEnable() == 1) {
+        if(Boolean.TRUE.equals(resources.getEnable())) {
             MwAppVersion appVersion = new MwAppVersion();
             appVersion.setPlatformName(PAY_NAME);
-            appVersion.setEnable(0);
+            appVersion.setEnable(false);
             versionService.update(appVersion, new LambdaQueryWrapper<>());
         }
         resources.setPlatformName(PAY_NAME);

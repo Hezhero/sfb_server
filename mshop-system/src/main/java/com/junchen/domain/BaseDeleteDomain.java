@@ -33,5 +33,5 @@ public class BaseDeleteDomain implements Serializable {
 
     @JsonIgnore
     @TableField(fill= FieldFill.INSERT)
-    private Integer isDel;
+    private Boolean isDel;
 }

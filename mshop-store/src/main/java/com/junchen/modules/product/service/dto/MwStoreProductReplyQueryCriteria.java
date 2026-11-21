@@ -14,5 +14,5 @@ import lombok.Data;
 @Data
 public class MwStoreProductReplyQueryCriteria {
     @Query
-    private Integer isDel;
+    private Boolean isDel;
 }

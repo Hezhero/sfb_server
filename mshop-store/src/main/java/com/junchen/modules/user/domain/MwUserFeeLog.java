@@ -1,6 +1,7 @@
 package com.junchen.modules.user.domain;
 
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.junchen.domain.BaseDomain;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,6 +38,7 @@ public class MwUserFeeLog extends BaseDomain {
     @ApiModelProperty(value = "佣金类型 1=总览 2=自购 4=金客 5=银客 6=已结算")
     private Integer cid;
     @ApiModelProperty(value = "时间 1=今天 2=昨天 3=本月 4=上月 5=近30天 6近7天")
+    @TableField("biz_type")
     private Integer type;
     @ApiModelProperty(value = "平台,tb jd pdd dy vip fans up")
     private String platform;

@@ -6,6 +6,7 @@ package com.junchen.modules.template.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -61,6 +62,7 @@ public class MwShippingTemplatesFree implements Serializable {
 
     /** 计费方式 */
     @NotNull
+    @TableField("biz_type")
     private Integer type;
 
 

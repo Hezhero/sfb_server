@@ -26,7 +26,7 @@ public interface RoleMapper extends CoreMapper<Role> {
      * @param id 用户ID
      * @return
      */
-    @Select( "SELECT r.id,r.create_time,r.data_scope,r.`level`,r.`name`,r.permission,r.remark " +
+    @Select( "SELECT r.id,r.create_time,r.data_scope,r.biz_level,r.biz_name,r.permission,r.remark " +
             "FROM system_role r LEFT OUTER JOIN system_users_roles u1 ON r.id = u1.role_id " +
             "LEFT OUTER JOIN system_user u2 ON u1.user_id = u2.id "+
             "WHERE u2.id = #{id}")
@@ -45,7 +45,7 @@ public interface RoleMapper extends CoreMapper<Role> {
      * @param id 用户ID
      * @return
      */
-    @Select("select m.* from system_role m LEFT JOIN system_users_roles t on m.id= t.role_id LEFT JOIN `system_user` r on r.id = t.user_id where r.id = #{id}")
+    @Select("select m.* from system_role m LEFT JOIN system_users_roles t on m.id= t.role_id LEFT JOIN system_user r on r.id = t.user_id where r.id = #{id}")
     List<Role> selectListByUserId(@Param("id") Long id);
 
 }

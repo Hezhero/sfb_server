@@ -92,6 +92,7 @@ public class MwStoreSeckill extends BaseDomain {
 
     /** 成本 */
     @ApiModelProperty(value = "成本")
+    @TableField("biz_cost")
     private BigDecimal cost;
     /** 销量 */
     @ApiModelProperty(value = "秒杀销量")
@@ -136,12 +137,12 @@ public class MwStoreSeckill extends BaseDomain {
 
     /** 是否包邮 */
     @ApiModelProperty(value = "是否包邮")
-    private Integer isPostage;
+    private Boolean isPostage;
 
 
     /** 热门推荐 */
     @ApiModelProperty(value = "是否热门推荐")
-    private Integer isHot;
+    private Boolean isHot;
 
 
 
@@ -154,7 +155,7 @@ public class MwStoreSeckill extends BaseDomain {
 
     /** 显示 */
     @ApiModelProperty(value = "是否显示 0否 1显示")
-    private Integer isShow;
+    private Boolean isShow;
 
 
     /** 时间段id */

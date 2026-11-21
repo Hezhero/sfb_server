@@ -28,21 +28,21 @@ public interface MwStoreBargainMapper extends CoreMapper<MwStoreBargain> {
     int decStockIncSales(@Param("num") int num,@Param("bargainId") Long bargainId);
 
     @Select("SELECT c.id,c.image,c.min_price as price,c.price as otPrice," +
-            "c.title as storeName,c.status as isShow,c.cost," +
+            "c.title as storeName,c.status as isShow,c.biz_cost as cost," +
             "c.is_postage as isPostage,c.postage,c.sales,c.stock,c.is_del as isDel" +
             " FROM mw_store_bargain c " +
-            " WHERE c.id = #{id} and c.is_del = 0")
+            " WHERE c.id = #{id} and c.is_del = false")
     MwStoreProductQueryVo bargainInfo(Long id);
 
-    @Select("select IFNULL(sum(look),0)" +
+    @Select("select COALESCE(sum(look),0)" +
             "from mw_store_bargain")
     int lookCount();
 
-    @Select("select IFNULL(sum(share),0) as shareCount " +
+    @Select("select COALESCE(sum(biz_share),0) as shareCount " +
             "from mw_store_bargain")
     int shareCount();
 
-    @Update("update mw_store_bargain set share=share+1" +
+    @Update("update mw_store_bargain set biz_share=biz_share+1" +
             " where id=#{id}")
     void addBargainShare(@Param("id") Long id);
 
@@ -50,6 +50,6 @@ public interface MwStoreBargainMapper extends CoreMapper<MwStoreBargain> {
             " where id=#{id}")
     void addBargainLook(@Param("id") Long id);
 
-    @Delete("delete from mw_system_attachment where name = #{name}")
+    @Delete("delete from mw_system_attachment where biz_name = #{name}")
     void deleteBargainImg(@Param("name") String name);
 }

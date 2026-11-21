@@ -47,7 +47,7 @@ public class MwStoreProductReply extends BaseDomain {
 
 
     /** 唯一id */
-    @TableField(value = "`unique`")
+    @TableField("biz_unique")
     private String unique;
 
 
@@ -68,6 +68,7 @@ public class MwStoreProductReply extends BaseDomain {
 
 
     /** 评论内容 */
+    @TableField("biz_comment")
     private String comment;
 
 
@@ -86,7 +87,7 @@ public class MwStoreProductReply extends BaseDomain {
 
 
     /** 0未回复1已回复 */
-    private Integer isReply;
+    private Boolean isReply;
 
     @TableField(exist = false)
     private MwStoreProduct storeProduct;

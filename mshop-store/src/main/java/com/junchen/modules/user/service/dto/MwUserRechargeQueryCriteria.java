@@ -23,6 +23,6 @@ public class MwUserRechargeQueryCriteria {
     @Query(type = Query.Type.EQUAL)
     private Integer paid;
 
-    @Query(type = Query.Type.EQUAL)
+    @Query(type = Query.Type.EQUAL, propName = "biz_type")
     private Integer type;
 }

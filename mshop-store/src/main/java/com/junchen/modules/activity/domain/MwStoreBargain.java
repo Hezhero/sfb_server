@@ -7,6 +7,7 @@ package com.junchen.modules.activity.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
@@ -162,6 +163,7 @@ public class MwStoreBargain extends BaseDomain {
 
     /** 成本价 */
     @ApiModelProperty(value = "成本价")
+    @TableField("biz_cost")
     private BigDecimal cost;
 
 
@@ -172,13 +174,13 @@ public class MwStoreBargain extends BaseDomain {
 
     /** 是否推荐0不推荐1推荐 */
     @ApiModelProperty(value = "是否推荐0不推荐1推荐")
-    private Integer isHot;
+    private Boolean isHot;
 
 
 
     /** 是否包邮 0不包邮 1包邮 */
     @ApiModelProperty(value = "是否包邮 0不包邮 1包邮")
-    private Integer isPostage;
+    private Boolean isPostage;
 
 
     /** 邮费 */
@@ -189,6 +191,7 @@ public class MwStoreBargain extends BaseDomain {
     /** 砍价规则 */
     @NotBlank(message = "请填写砍价规则")
     @ApiModelProperty(value = "砍价规则描述")
+    @TableField("biz_rule")
     private String rule;
 
 
@@ -199,6 +202,7 @@ public class MwStoreBargain extends BaseDomain {
 
     /** 砍价产品分享量 */
     @ApiModelProperty(value = "砍价产品分享量")
+    @TableField("biz_share")
     private Integer share;
 
 

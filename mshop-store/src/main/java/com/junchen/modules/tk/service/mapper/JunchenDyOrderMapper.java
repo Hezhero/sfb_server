@@ -37,7 +37,7 @@ public interface JunchenDyOrderMapper extends CoreMapper<JunchenDyOrder> {
     void refundOrder(@Param("id") String orderId);
 
 
-    @Select("select IFNULL(sum(integral),0) from mw_order_dy " +
+    @Select("select COALESCE(sum(integral),0) from mw_order_dy " +
             "where uid=#{uid} and pay_success_time <= #{time} and bind=1 and cash=0")
     double totalCash(@Param("uid") Long uid, @Param("time") Date time);
 
@@ -48,39 +48,39 @@ public interface JunchenDyOrderMapper extends CoreMapper<JunchenDyOrder> {
     @Update("update mw_order_dy set cash = 1 where uid=#{uid} and pay_success_time <= #{time} and cash=0")
     void updateCash(@Param("uid") Long uid, @Param("time") Date time);
 
-    @Select( "select IFNULL(sum(total_pay_amount),0)  from mw_order_dy " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(total_pay_amount),0)  from mw_order_dy " +
+            "where is_del=false")
     Double sumTotalPrice();
 
-    @Select( "select IFNULL(sum(estimated_total_commission),0)  from mw_order_dy " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(estimated_total_commission),0)  from mw_order_dy " +
+            "where is_del=false")
     Double sumTotalFee();
 
-    @Select("SELECT IFNULL(sum(total_pay_amount),0) " +
+    @Select("SELECT COALESCE(sum(total_pay_amount),0) " +
             " FROM mw_order_dy ${ew.customSqlSegment}")
     Double sumPrice(@Param(Constants.WRAPPER) Wrapper<JunchenDyOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(estimated_total_commission),0) " +
+    @Select("SELECT COALESCE(sum(estimated_total_commission),0) " +
             " FROM mw_order_dy ${ew.customSqlSegment}")
     Double sumFee(@Param(Constants.WRAPPER) Wrapper<JunchenDyOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(total_pay_amount),0) as num," +
-            "DATE_FORMAT(pay_success_time, '%m-%d') as time " +
-            " FROM mw_order_dy where is_del=0 and inner_type=0 and pay_success_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_success_time,'%Y-%m-%d'), DATE_FORMAT(pay_success_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_success_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(total_pay_amount),0) as num," +
+            "to_char(pay_success_time, 'MM-DD') as time " +
+            " FROM mw_order_dy where is_del=false and inner_type=0 and pay_success_time >= #{time}" +
+            " GROUP BY to_char(pay_success_time,'YYYY-MM-DD'), to_char(pay_success_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_success_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(order_id) as num," +
-            "DATE_FORMAT(pay_success_time, '%m-%d') as time " +
-            " FROM mw_order_dy where is_del=0 and inner_type=0 and pay_success_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_success_time,'%Y-%m-%d'), DATE_FORMAT(pay_success_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_success_time, '%Y-%m-%d') ASC")
+            "to_char(pay_success_time, 'MM-DD') as time " +
+            " FROM mw_order_dy where is_del=false and inner_type=0 and pay_success_time >= #{time}" +
+            " GROUP BY to_char(pay_success_time,'YYYY-MM-DD'), to_char(pay_success_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_success_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
-    @Select("SELECT IFNULL(sum(estimated_total_commission),0) as num," +
-            "DATE_FORMAT(pay_success_time, '%m-%d') as time " +
-            " FROM mw_order_dy where is_del=0 and inner_type=0 and pay_success_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_success_time,'%Y-%m-%d'), DATE_FORMAT(pay_success_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_success_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(estimated_total_commission),0) as num," +
+            "to_char(pay_success_time, 'MM-DD') as time " +
+            " FROM mw_order_dy where is_del=false and inner_type=0 and pay_success_time >= #{time}" +
+            " GROUP BY to_char(pay_success_time,'YYYY-MM-DD'), to_char(pay_success_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_success_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_dy set flow_point = 'REFUND'" +
@@ -94,7 +94,7 @@ public interface JunchenDyOrderMapper extends CoreMapper<JunchenDyOrder> {
             " where order_id = #{id}")
     void invalidRefundOrders(@Param("id") String id);
 
-    @Select("SELECT IFNULL(sum(hb),0) " +
+    @Select("SELECT COALESCE(sum(hb),0) " +
             " FROM mw_order_dy ${ew.customSqlSegment}")
     Double sumHb(@Param(Constants.WRAPPER) Wrapper<JunchenDyOrder> wrapper);
 

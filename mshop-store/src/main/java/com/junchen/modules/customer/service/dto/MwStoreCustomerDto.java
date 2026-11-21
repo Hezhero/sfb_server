@@ -33,7 +33,7 @@ public class MwStoreCustomerDto implements Serializable {
     /** 修改时间 */
     private Date updateTime;
 
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 是否启用 */
     private Integer isEnable;

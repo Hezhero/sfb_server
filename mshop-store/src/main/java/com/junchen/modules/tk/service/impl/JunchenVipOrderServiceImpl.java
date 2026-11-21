@@ -118,7 +118,7 @@ public class JunchenVipOrderServiceImpl extends BaseServiceImpl<JunchenVipOrderM
     @Override
     public List<JunchenVipOrder> getUnbindOrderList(Long prior) {
         LambdaQueryWrapper<JunchenVipOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenVipOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenVipOrder::getIsDel, false);
         wrapper.ne(JunchenVipOrder::getOrderSubStatusName, VIP_NOT_VALID_ORDER_STATUS);
         wrapper.isNull(JunchenVipOrder::getUid);
         LocalDateTime now = LocalDateTime.now().minusSeconds(prior);
@@ -143,7 +143,7 @@ public class JunchenVipOrderServiceImpl extends BaseServiceImpl<JunchenVipOrderM
     @Override
     public List<JunchenVipOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenVipOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenVipOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenVipOrder::getIsDel, false);
         wrapper.eq(JunchenVipOrder::getOrderSubStatusName, VIP_NOT_VALID_ORDER_STATUS);
         wrapper.eq(JunchenVipOrder::getBind, 1);
 
@@ -262,8 +262,8 @@ public class JunchenVipOrderServiceImpl extends BaseServiceImpl<JunchenVipOrderM
                 .appKey("0a0007bb")
                 .channelTag("5cb48570ea42f03970c1c40a2b8e2146")
                 .commission(feeStr)
-                .isPrepay(0)
-                .isSplit(0)
+                .isPrepay(false)
+                .isSplit(false)
                 .lastUpdateTime(createTime)
                 .newCustomer(2)
                 .orderSource("app-android")

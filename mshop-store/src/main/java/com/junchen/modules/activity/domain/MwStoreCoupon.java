@@ -7,6 +7,7 @@ package com.junchen.modules.activity.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
@@ -76,6 +77,7 @@ public class MwStoreCoupon extends BaseDomain {
 
     /** 优惠券类型（0：通用券，1：商品券，2：内部券）  */
     @ApiModelProperty(value = "优惠券类型（0：通用券，1：商品券，2：内部券） ")
+    @TableField("biz_type")
     private Integer type;
 
     /** 优惠券绑定产品ID  */

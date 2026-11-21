@@ -13,6 +13,6 @@ import com.junchen.annotation.Query;
  */
 @Data
 public class MwStoreProductRelationQueryCriteria {
-    @Query(type = Query.Type.EQUAL)
+    @Query(type = Query.Type.EQUAL, propName = "biz_type")
     private String type;
 }

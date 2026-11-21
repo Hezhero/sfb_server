@@ -37,7 +37,7 @@ public interface JunchenTbOrderMapper extends CoreMapper<JunchenTbOrder> {
     @Update("update mw_order_tb set bind = 2 where trade_parent_id = #{id}")
     void refundOrder(@Param("id") Long id);
 
-    @Select("select IFNULL(sum(integral),0) from mw_order_tb " +
+    @Select("select COALESCE(sum(integral),0) from mw_order_tb " +
             "where uid=#{uid} and tk_create_time <= #{time} and bind=1 and cash=0")
     double totalCash(@Param("uid") Long uid, @Param("time") Date time);
 
@@ -47,39 +47,39 @@ public interface JunchenTbOrderMapper extends CoreMapper<JunchenTbOrder> {
     @Update("update mw_order_tb set cash = 1 where uid=#{uid} and tk_create_time <= #{time} and cash=0")
     void updateCash(@Param("uid") Long uid, @Param("time") Date time);
 
-    @Select( "select IFNULL(sum(alipay_total_price),0)  from mw_order_tb " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(alipay_total_price),0)  from mw_order_tb " +
+            "where is_del=false")
     Double sumTotalPrice();
 
-    @Select( "select IFNULL(sum(pub_share_pre_fee),0)  from mw_order_tb " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(pub_share_pre_fee),0)  from mw_order_tb " +
+            "where is_del=false")
     Double sumTotalFee();
 
-    @Select("SELECT IFNULL(sum(alipay_total_price),0) " +
+    @Select("SELECT COALESCE(sum(alipay_total_price),0) " +
             " FROM mw_order_tb ${ew.customSqlSegment}")
     Double sumPrice(@Param(Constants.WRAPPER) Wrapper<JunchenTbOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(pub_share_pre_fee),0) " +
+    @Select("SELECT COALESCE(sum(pub_share_pre_fee),0) " +
             " FROM mw_order_tb ${ew.customSqlSegment}")
     Double sumFee(@Param(Constants.WRAPPER) Wrapper<JunchenTbOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(alipay_total_price),0) as num," +
-            "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
-            " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(alipay_total_price),0) as num," +
+            "to_char(tk_create_time, 'MM-DD') as time " +
+            " FROM mw_order_tb where is_del=false and inner_type=0 and tk_create_time >= #{time}" +
+            " GROUP BY to_char(tk_create_time,'YYYY-MM-DD'), to_char(tk_create_time, 'MM-DD') " +
+            " ORDER BY to_char(tk_create_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(trade_parent_id) as num," +
-            "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
-            " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
+            "to_char(tk_create_time, 'MM-DD') as time " +
+            " FROM mw_order_tb where is_del=false and inner_type=0 and tk_create_time >= #{time}" +
+            " GROUP BY to_char(tk_create_time,'YYYY-MM-DD'), to_char(tk_create_time, 'MM-DD') " +
+            " ORDER BY to_char(tk_create_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
-    @Select("SELECT IFNULL(sum(pub_share_pre_fee),0) as num," +
-            "DATE_FORMAT(tk_create_time, '%m-%d') as time " +
-            " FROM mw_order_tb where is_del=0 and inner_type=0 and tk_create_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(tk_create_time,'%Y-%m-%d'), DATE_FORMAT(tk_create_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(tk_create_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(pub_share_pre_fee),0) as num," +
+            "to_char(tk_create_time, 'MM-DD') as time " +
+            " FROM mw_order_tb where is_del=false and inner_type=0 and tk_create_time >= #{time}" +
+            " GROUP BY to_char(tk_create_time,'YYYY-MM-DD'), to_char(tk_create_time, 'MM-DD') " +
+            " ORDER BY to_char(tk_create_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_tb set tk_status = 13" +
@@ -93,7 +93,7 @@ public interface JunchenTbOrderMapper extends CoreMapper<JunchenTbOrder> {
     void invalidRefundOrders(@Param("id") Long id);
 
 
-    @Select("SELECT IFNULL(sum(hb),0) " +
+    @Select("SELECT COALESCE(sum(hb),0) " +
             " FROM mw_order_tb ${ew.customSqlSegment}")
     Double sumHb(@Param(Constants.WRAPPER) Wrapper<JunchenTbOrder> wrapper);
 

@@ -60,6 +60,7 @@ public class User extends BaseDomain {
     private Dept dept;
 
     /** 密码 */
+    @TableField("biz_password")
     private String password;
 
     /** 用户名 */

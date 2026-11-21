@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 public class DictDetailQueryCriteria{
 
-    @Query(type = Query.Type.INNER_LIKE)
+    @Query(type = Query.Type.INNER_LIKE, propName = "biz_label")
     private String label;
 
     private String dictName;

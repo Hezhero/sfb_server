@@ -31,7 +31,7 @@ public interface MwStoreBargainUserMapper extends CoreMapper<MwStoreBargainUser>
             "u.bargain_id as bargainId,u.bargain_price as bargainPrice," +
             "u.bargain_price_min as bargainPriceMin,u.price,u.status,b.title," +
             "b.image,b.stop_time as datatime FROM mw_store_bargain_user u INNER JOIN " +
-            "mw_store_bargain b ON b.id=u.bargain_id WHERE u.uid = #{uid} AND u.is_del = 0 " +
+            "mw_store_bargain b ON b.id=u.bargain_id WHERE u.uid = #{uid} AND u.is_del = false " +
             "ORDER BY u.id DESC ")
     List<MwStoreBargainUserQueryVo> getBargainUserList(@Param("uid") Long uid, Page page);
 

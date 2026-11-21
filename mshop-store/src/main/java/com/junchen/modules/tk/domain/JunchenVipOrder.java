@@ -10,7 +10,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.junchen.common.handler.PgJsonbTypeHandler;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
@@ -65,10 +65,10 @@ public class JunchenVipOrder extends TkOrder {
     private Date commissionEnterTime;
 
     /** 是否预付订单:0-否，1-是 */
-    private Integer isPrepay;
+    private Boolean isPrepay;
 
     /** 订单拆单标识: 0-否，1-是 */
-    private Integer isSplit;
+    private Boolean isSplit;
 
     /** 订单上次更新时间 时间戳 单位毫秒 */
     private Date lastUpdateTime;
@@ -95,7 +95,7 @@ public class JunchenVipOrder extends TkOrder {
     private Integer status;
 
     /** 商品json array信息 */
-    @TableField(typeHandler = FastjsonTypeHandler.class)
+    @TableField(typeHandler = PgJsonbTypeHandler.class)
     private ArrayList<JSONObject> detailList;
 
 

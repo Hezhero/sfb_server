@@ -277,22 +277,31 @@ public class TkService {
         if(!ReUtil.isMatch("^[0-9-]{10,30}$", orderId)){
             throw new MshopException("不是正确的订单号");
         }
+        // PostgreSQL 中 parent_id / trade_parent_id 为 bigint，不能用字符串比较（MySQL 会隐式转换）。
+        // 订单号含非数字（如美团带连字符）时不可能命中 bigint 列，用 -1 保证查不到，语义与 MySQL 一致。
+        Long numericOrderId = null;
+        try {
+            numericOrderId = Long.valueOf(orderId);
+        } catch (NumberFormatException ignored) {
+            numericOrderId = -1L;
+        }
+        final Long tbOrderId = numericOrderId;
         CompletableFuture<List<JunchenTbOrder>> tbOrderFuture =
                 CompletableFuture.supplyAsync(()->
                         tbOrderService.list(new LambdaQueryWrapper<JunchenTbOrder>()
-                                .and(i->i.eq(JunchenTbOrder::getParentId,orderId)
+                                .and(i->i.eq(JunchenTbOrder::getParentId, tbOrderId)
                                         .or()
-                                        .eq(JunchenTbOrder::getTradeParentId,orderId))));
+                                        .eq(JunchenTbOrder::getTradeParentId, tbOrderId))));
         CompletableFuture<List<JunchenJdOrder>> jdOrderFuture = CompletableFuture.supplyAsync(()->{
             LambdaQueryWrapper<JunchenJdOrder> wrapperO = new LambdaQueryWrapper<>();
-            wrapperO.eq(JunchenJdOrder::getOrderId, orderId);
+            wrapperO.eq(JunchenJdOrder::getOrderId, tbOrderId);
             return jdOrderService.list(wrapperO);
         });
         CompletableFuture<JunchenPddOrder> pddOrderFuture = CompletableFuture.supplyAsync(()->pddOrderService.getById(orderId));
         CompletableFuture<JunchenVipOrder> vipOrderFuture = CompletableFuture.supplyAsync(()->vipOrderService.getById(orderId));
         CompletableFuture<JunchenDyOrder> dyOrderFuture = CompletableFuture.supplyAsync(()->dyOrderService.getById(orderId));
         CompletableFuture<List<JunchenMtOrder>> mtOrder2Future = CompletableFuture.supplyAsync(()->mtOrderService
-                .list(Wrappers.<JunchenMtOrder>lambdaQuery().eq(JunchenMtOrder::getOrderId,orderId)));
+                .list(Wrappers.<JunchenMtOrder>lambdaQuery().eq(JunchenMtOrder::getOrderId, tbOrderId)));
         CompletableFuture.allOf(tbOrderFuture, jdOrderFuture, pddOrderFuture, vipOrderFuture, dyOrderFuture, mtOrder2Future);
 
 

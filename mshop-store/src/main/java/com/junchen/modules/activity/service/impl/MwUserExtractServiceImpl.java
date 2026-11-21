@@ -228,7 +228,7 @@ public class MwUserExtractServiceImpl extends BaseServiceImpl<MwUserExtractMappe
         }
         //校验用户是否禁止提现
         MwUserExtractConfig extractConfig = extractConfigMapper.selectById(uid);
-        if(extractConfig != null && extractConfig.getAutoExtract() == 1) {
+        if(extractConfig != null && Boolean.TRUE.equals(extractConfig.getAutoExtract())) {
             return;
         }
 

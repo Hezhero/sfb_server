@@ -3,6 +3,7 @@
  * All rights reserved, Designed By syh.hzhero.cn
  */
 package com.junchen.modules.canvas.domain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -30,10 +31,12 @@ public class StoreCanvas extends BaseDomain {
     private String json;
 
     /** 类型 1-系统画布 2-自定义页面 3-商家店铺装修 */
+    @TableField("biz_type")
     private Integer type;
 
     /** 名称 */
     @NotBlank
+    @TableField("biz_name")
     private String name;
 
     /** 店铺id，当type=3的时候，值为具体的店铺id，其它情况为0 */

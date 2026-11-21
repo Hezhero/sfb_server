@@ -32,6 +32,7 @@ public class Role extends BaseDomain {
 
     /** 名称 */
     @NotBlank(message = "请填写角色名称")
+    @TableField("biz_name")
     private String name;
 
 
@@ -44,6 +45,7 @@ public class Role extends BaseDomain {
 
 
     /** 角色级别 */
+    @TableField("biz_level")
     private Integer level;
 
     @TableField(exist = false)

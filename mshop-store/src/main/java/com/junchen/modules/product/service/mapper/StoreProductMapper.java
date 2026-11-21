@@ -98,10 +98,10 @@ public interface StoreProductMapper extends CoreMapper<MwStoreProduct> {
             "where id=#{productId}")
     int incBrowseNum(@Param("productId") Long productId);
 
-    @Delete("DELETE from mw_system_attachment where name like CONCAT(#{id},'_%',#{name}, '%')")
+    @Delete("DELETE from mw_system_attachment where biz_name like CONCAT(#{id},'_%',#{name}, '%')")
     void deleteForwardImg(@Param("id") Long id,@Param("name") String name);
 
     @Override
-    @Select("SELECT id,spec_type,ot_price,mer_use,description,is_postage,is_sub,is_best,(sales+ficti) as sales,price,is_bargain,vip_price,store_name,stock,keyword,image,cost,is_good,unit_name,is_benefit,update_time,give_integral,is_new,sort,slider_image,is_show,bar_code,postage,code_path,create_time,cate_id,is_seckill,mer_id,temp_id,ficti,store_info,is_del,is_hot,is_integral,integral,browse FROM mw_store_product ${ew.customSqlSegment}")
+    @Select("SELECT id,spec_type,ot_price,mer_use,description,is_postage,is_sub,is_best,(sales+ficti) as sales,price,is_bargain,vip_price,store_name,stock,keyword,image,biz_cost as cost,is_good,unit_name,is_benefit,update_time,give_integral,is_new,sort,slider_image,is_show,bar_code,postage,code_path,create_time,cate_id,is_seckill,mer_id,temp_id,ficti,store_info,is_del,is_hot,is_integral,integral,browse FROM mw_store_product ${ew.customSqlSegment}")
     <E extends IPage<MwStoreProduct>> E selectPage(E page, @Param(Constants.WRAPPER) Wrapper<MwStoreProduct> queryWrapper);
 }

@@ -7,6 +7,7 @@ package com.junchen.modules.shop.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class MwSystemStore extends BaseDomain {
 
     /** 门店名称 */
     @NotBlank(message = "请填写门店名称")
+    @TableField("biz_name")
     private String name;
 
 
@@ -80,7 +82,7 @@ public class MwSystemStore extends BaseDomain {
 
 
     /** 是否显示 */
-    private Integer isShow;
+    private Boolean isShow;
 
 
     private Date validTimeEnd;

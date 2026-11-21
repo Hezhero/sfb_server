@@ -6,6 +6,7 @@ package com.junchen.modules.tools.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -50,11 +51,13 @@ public class QiniuConfig implements Serializable {
 
     /** 空间类型 */
    // @Column(name = "type")
+    @TableField("biz_type")
     private String type;
 
 
     /** 机房 */
    // @Column(name = "zone")
+    @TableField("biz_zone")
     private String zone;
 
 

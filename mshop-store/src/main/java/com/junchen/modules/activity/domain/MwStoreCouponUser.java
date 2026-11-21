@@ -7,6 +7,7 @@ package com.junchen.modules.activity.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
@@ -74,6 +75,7 @@ public class MwStoreCouponUser extends BaseDomain {
 
     /** 获取方式 */
     @ApiModelProperty(value = "获取方式：get领取 send派送")
+    @TableField("biz_type")
     private String type;
 
 
@@ -84,7 +86,7 @@ public class MwStoreCouponUser extends BaseDomain {
 
     /** 是否有效 */
     @ApiModelProperty(value = "是否有效1是 0否")
-    private Integer isFail;
+    private Boolean isFail;
 
 
     public void copy(MwStoreCouponUser source){

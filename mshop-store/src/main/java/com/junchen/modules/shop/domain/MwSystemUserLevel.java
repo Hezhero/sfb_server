@@ -37,6 +37,7 @@ public class MwSystemUserLevel extends BaseDomain {
 
     /** 会员名称 */
     @NotBlank(message = "名称必填")
+    @TableField("biz_name")
     private String name;
 
 
@@ -49,15 +50,15 @@ public class MwSystemUserLevel extends BaseDomain {
 
 
     /** 是否为永久会员 */
-    private Integer isForever;
+    private Boolean isForever;
 
 
     /** 是否购买,1=购买,0=不购买 */
-    private Integer isPay;
+    private Boolean isPay;
 
 
     /** 是否显示 1=显示,0=隐藏 */
-    private Integer isShow;
+    private Boolean isShow;
 
 
     /** 会员等级 */
@@ -76,7 +77,7 @@ public class MwSystemUserLevel extends BaseDomain {
     private BigDecimal discountTwo;
 
     /** 说明 */
-    @TableField(value = "`explain`")
+    @TableField("biz_explain")
     private String explain;
 
     @NotBlank(message = "充值id必填,建议3位数字，不能重复")
@@ -86,6 +87,7 @@ public class MwSystemUserLevel extends BaseDomain {
      *  用户类型 tb、pdd、jd、vip、dy
      *  默认tb，通用类型，其他平台不配置时默认使用tb
      * */
+    @TableField("biz_type")
     private String type;
 
     public void copy(MwSystemUserLevel source){

@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.junchen.domain.BaseDomain;
 import com.junchen.modules.user.service.dto.AliUserDto;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.junchen.common.handler.PgJsonbTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,6 +45,7 @@ public class MwUser extends BaseDomain {
     private String username;
 
     /** 用户密码（跟pwd） */
+    @TableField("biz_password")
     private String password;
 
     /** 真实姓名 */
@@ -89,6 +90,7 @@ public class MwUser extends BaseDomain {
     private Integer status;
 
     /** 等级 */
+    @TableField("biz_level")
     private Integer level;
     private Integer levelPdd;
     private Integer levelJd;
@@ -104,7 +106,7 @@ public class MwUser extends BaseDomain {
     private Date spreadTime;
 
     /** 被用于开通店铺 1已使用 0未使用 */
-    private Integer spreadUpdate;
+    private Boolean spreadUpdate;
 
     /** 用户类型 */
     private String userType;
@@ -112,7 +114,7 @@ public class MwUser extends BaseDomain {
     /** 下级人数 */
     private Long spreadCount;
 
-    @TableField(typeHandler = FastjsonTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
+    @TableField(typeHandler = PgJsonbTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
     private AliUserDto aliProfile;
 
     /**

@@ -20,7 +20,7 @@ public class PayChannelQueryCriteria {
 
     @Query
     private Integer status;
-    @Query
+    @Query(propName = "biz_type")
     private Integer type;
 
     @Query

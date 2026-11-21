@@ -30,6 +30,7 @@ public class Job extends BaseDomain {
 
     /** 岗位名称 */
     @NotBlank(message = "岗位名称不能为空")
+    @TableField("biz_name")
     private String name;
 
 

@@ -57,7 +57,7 @@ public class MetaHandler implements MetaObjectHandler {
             }
             if (metaObject.hasSetter("isDel")) {
                 log.debug("自动插入 isDel");
-                this.setFieldValByName("isDel", 0, metaObject);
+                this.setFieldValByName("isDel", false, metaObject);
             }
             if (metaObject.hasSetter("addTime")) {
                 String timestamp = String.valueOf(System.currentTimeMillis() / 1000);

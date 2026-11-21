@@ -6,6 +6,7 @@ package com.junchen.modules.tk.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.junchen.domain.BaseDomain;
@@ -73,7 +74,7 @@ public class JunchenPddOrder extends TkOrder {
     private String mallName;
 
     /** 是否直推 ，1表示是，0表示否 */
-    private Integer isDirect;
+    private Boolean isDirect;
 
     /** 实际支付金额，单位为分 */
     private Long orderAmount;
@@ -172,6 +173,7 @@ public class JunchenPddOrder extends TkOrder {
     private Integer subsidyType;
 
     /** 下单场景类型：0-单品推广，1-红包活动推广，4-多多进宝商城推广，7-今日爆款，8-品牌清仓，9-1.9包邮，77-刮刮卡活动推广，94-充值中心，101-品牌黑卡，103-百亿补贴频道，104-内购清单频道，105-超级红包 */
+    @TableField("biz_type")
     private Integer type;
 
     /** 招商多多客id */

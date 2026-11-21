@@ -15,6 +15,6 @@ import lombok.Data;
 public class MwWechatLiveGoodsQueryCriteria {
 
     /** 模糊 */
-    @Query(type = Query.Type.INNER_LIKE)
+    @Query(type = Query.Type.INNER_LIKE, propName = "biz_name")
     private String name;
 }

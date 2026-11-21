@@ -51,12 +51,12 @@ public class MwUserBankServiceImpl extends BaseServiceImpl<MwUserBankMapper, MwU
     @Override
     public void setDefault(Long uid,Long bankId){
         MwUserBank bank = new MwUserBank();
-        bank.setIsDefault(ShopCommonEnum.DEFAULT_0.getValue());
+        bank.setIsDefault(false);
         mwUserAddressMapper.update(bank,
                 new LambdaQueryWrapper<MwUserBank>().eq(MwUserBank::getUid,uid));
 
         MwUserBank userBank = new MwUserBank();
-        userBank.setIsDefault(DEFAULT_1.getValue());
+        userBank.setIsDefault(true);
         userBank.setId(bankId);
         mwUserAddressMapper.updateById(userBank);
     }
@@ -69,12 +69,12 @@ public class MwUserBankServiceImpl extends BaseServiceImpl<MwUserBankMapper, MwU
     @Override
     public void setExtractDefault(Long uid,Long bankId){
         MwUserBank bank = new MwUserBank();
-        bank.setExtractDefault(ShopCommonEnum.DEFAULT_0.getValue());
+        bank.setExtractDefault(false);
         mwUserAddressMapper.update(bank,
                 new LambdaQueryWrapper<MwUserBank>().eq(MwUserBank::getUid,uid));
 
         MwUserBank userBank = new MwUserBank();
-        userBank.setExtractDefault(DEFAULT_1.getValue());
+        userBank.setExtractDefault(true);
         userBank.setId(bankId);
         mwUserAddressMapper.updateById(userBank);
     }

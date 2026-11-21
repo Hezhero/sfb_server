@@ -104,7 +104,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus</artifactId>
-            <version>3.5.1</version>
+            <version>3.5.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -203,11 +203,10 @@
             <version>${swagger-models.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!--Mysql依赖包（Spring Boot 2.7.x 坐标由 mysql:mysql-connector-java 变更为 com.mysql:mysql-connector-j）-->
+        <!--PostgreSQL 驱动（MySQL 5.7 迁移至 PG 13；版本由 Spring Boot 2.7.x BOM 管理）-->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
         </dependency>
         <!-- druid数据源驱动 -->
         <dependency>

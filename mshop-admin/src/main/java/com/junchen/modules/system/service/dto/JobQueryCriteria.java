@@ -20,7 +20,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class JobQueryCriteria {
 
-    @Query(type = Query.Type.INNER_LIKE)
+    @Query(type = Query.Type.INNER_LIKE, propName = "biz_name")
     private String name;
 
     @Query

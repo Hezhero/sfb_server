@@ -289,7 +289,7 @@ public class MwStoreCartServiceImpl extends BaseServiceImpl<StoreCartMapper, MwS
                 .bargainId(bargainId)
                 .combinationId(combinationId)
                 .seckillId(seckillId)
-                .isNew(isNew)
+                .isNew(Integer.valueOf(1).equals(isNew))
                 .uid(uid)
                 .build();
         if (cart != null) {

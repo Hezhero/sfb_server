@@ -25,9 +25,9 @@ import java.util.List;
 public interface UserMapper extends CoreMapper<MwUser> {
 
 
-    @Select("<script>SELECT u.uid,u.nickname,u.avatar,u.phone,u.integral, DATE_FORMAT(u.create_time,'%Y/%m/%d') as time," +
+    @Select("<script>SELECT u.uid,u.nickname,u.avatar,u.phone,u.integral, to_char(u.create_time,'YYYY/MM/DD') as time," +
             "u.spread_count as childCount,COUNT(o.id) as orderCount," +
-            "IFNULL(SUM(o.pay_integral),0) as numberCount FROM mw_user u " +
+            "COALESCE(SUM(o.pay_integral),0) as numberCount FROM mw_user u " +
             "LEFT JOIN mw_store_order o ON u.uid=o.uid " +
             "WHERE u.uid in <foreach item='id' index='index' collection='uids' " +
             " open='(' separator=',' close=')'>" +
@@ -76,8 +76,8 @@ public interface UserMapper extends CoreMapper<MwUser> {
 
     @Update("update mw_user set additional_no = ${no} where uid = #{id}")
     void updateAdditionalNo(@Param("no") String no,@Param("id") Long id);
-    @Select("<script>SELECT u.uid,u.nickname,u.avatar,u.phone,u.level,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,DATE_FORMAT(u.create_time,'%Y.%m.%d') as time," +
-            "DATE_FORMAT(u.update_time,'%Y.%m.%d') as updateTime," +
+    @Select("<script>SELECT u.uid,u.nickname,u.avatar,u.phone,u.biz_level as level,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,to_char(u.create_time,'YYYY.MM.DD') as time," +
+            "to_char(u.update_time,'YYYY.MM.DD') as updateTime," +
             "u.spread_count as childCount" +
             " FROM mw_user u " +
 //            "LEFT JOIN mw_user_fee_log o ON u.uid=o.uid " +
@@ -96,19 +96,19 @@ public interface UserMapper extends CoreMapper<MwUser> {
                                              @Param("uids") List uids,
                                              @Param("orderByStr") String orderBy);
 
-    @Select("SELECT GROUP_CONCAT(fee SEPARATOR '#')" +
-            " FROM mw_user_fee_log WHERE uid = #{uid} AND type=3 AND cid=1")
+    @Select("SELECT string_agg(fee, '#')" +
+            " FROM mw_user_fee_log WHERE uid = #{uid} AND biz_type=3 AND cid=1")
     String thirtyFee(String uid);
-    @Select("SELECT uid, DATE_FORMAT(update_time,'%Y/%m/%d') as updateTime" +
+    @Select("SELECT uid, to_char(update_time,'YYYY/MM/DD') as updateTime" +
             " FROM mw_user ${ew.customSqlSegment}")
     List<PromUserDto> selectIds(@Param(Constants.WRAPPER) Wrapper<MwUser> wrapper);
 
-    @Select("SELECT u.uid,u.`level`,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,p.refund FROM `mw_user` u " +
-            "LEFT JOIN `mw_user_pool` p ON u.uid=p.uid WHERE u.uid = #{uid}")
+    @Select("SELECT u.uid,u.biz_level as level,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,p.refund FROM mw_user u " +
+            "LEFT JOIN mw_user_pool p ON u.uid=p.uid WHERE u.uid = #{uid}")
     UserRefundDto getUserRefund(@Param("uid") Long uid);
 
-    @Select("<script>SELECT u.uid,u.`level`,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,p.refund FROM `mw_user` u " +
-            "LEFT JOIN `mw_user_pool` p ON u.uid=p.uid " +
+    @Select("<script>SELECT u.uid,u.biz_level as level,u.level_jd,u.level_pdd,u.level_dy,u.level_vip,p.refund FROM mw_user u " +
+            "LEFT JOIN mw_user_pool p ON u.uid=p.uid " +
             "WHERE u.uid in <foreach item='id' index='index' collection='uids' " +
             " open='(' separator=',' close=')'>" +
             "   #{id}" +

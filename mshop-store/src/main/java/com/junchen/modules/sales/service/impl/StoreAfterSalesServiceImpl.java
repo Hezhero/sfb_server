@@ -104,7 +104,7 @@ public class StoreAfterSalesServiceImpl extends BaseServiceImpl<StoreAfterSalesM
         storeAfterSales.setState(AfterSalesStatusEnum.STATUS_0.getValue());
         storeAfterSales.setSalesState(0);
         storeAfterSales.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
-        storeAfterSales.setIsDel(0);
+        storeAfterSales.setIsDel(false);
         storeAfterSales.setUserId(userId);
         baseMapper.insert(storeAfterSales);
         //售后商品详情
@@ -114,7 +114,7 @@ public class StoreAfterSalesServiceImpl extends BaseServiceImpl<StoreAfterSalesM
             storeAfterSalesItem.setStoreAfterSalesId(storeAfterSales.getId());
             storeAfterSalesItem.setProductId(mwStoreOrderCartInfo.getProductId());
             storeAfterSalesItem.setCartInfo(mwStoreOrderCartInfo.getCartInfo());
-            storeAfterSalesItem.setIsDel(0);
+            storeAfterSalesItem.setIsDel(false);
             storeAfterSalesItemMapper.insert(storeAfterSalesItem);
         }
 
@@ -180,7 +180,7 @@ public class StoreAfterSalesServiceImpl extends BaseServiceImpl<StoreAfterSalesM
                 .in(!status.equals(AfterSalesStatusEnum.STATUS_0.getValue()), StoreAfterSales::getState, integers)
                 .eq(StringUtils.isNotBlank(orderCode), StoreAfterSales::getOrderCode, orderCode)
                 .orderByDesc(StoreAfterSales::getCreateTime)
-                .eq(StoreAfterSales::getIsDel, ShopCommonEnum.DELETE_0.getValue()));
+                .eq(StoreAfterSales::getIsDel, false));
         List<StoreAfterSalesVo> storeAfterSalesVos = generator.convert(storeAfterSalesPage.getRecords(), StoreAfterSalesVo.class);
         Map<String, Object> map = new HashMap<>();
         if (uid == null) {
@@ -378,7 +378,7 @@ public class StoreAfterSalesServiceImpl extends BaseServiceImpl<StoreAfterSalesM
                 .eq(ObjectUtils.isNotEmpty(criteria.getSalesState()), StoreAfterSales::getSalesState, criteria.getSalesState())
                 .eq(ObjectUtils.isNotEmpty(criteria.getServiceType()), StoreAfterSales::getServiceType, criteria.getServiceType())
                 .orderByDesc(StoreAfterSales::getCreateTime)
-                .eq(StoreAfterSales::getIsDel, ShopCommonEnum.DELETE_0.getValue());
+                .eq(StoreAfterSales::getIsDel, false);
         if (CollectionUtils.isNotEmpty(criteria.getTime())) {
             eq.ge(StoreAfterSales::getCreateTime, criteria.getTime().get(0))
                     .le(StoreAfterSales::getCreateTime, criteria.getTime().get(1));

@@ -3,6 +3,7 @@ package com.junchen.modules.tk.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.junchen.annotation.UpsertConflict;
 import com.junchen.domain.BaseDomain;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,6 +38,7 @@ import java.util.Date;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("mw_dtk_goods")
+@UpsertConflict("dtk_id")
 @ApiModel(value = "MwDtkGoods对象", description = "大淘客商品库")
 public class MwDtkGoods extends BaseDomain {
 

@@ -39,9 +39,11 @@ public class VerificationCode  implements Serializable {
     private Boolean status = true;
 
     /** 类型 ：phone 和 email */
+    @TableField("biz_type")
     private String type;
 
     /** 具体的phone与email */
+    @TableField("biz_value")
     private String value;
 
     /** 创建日期 */

@@ -3,6 +3,7 @@ package com.junchen.modules.user.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.junchen.annotation.UpsertConflict;
 import com.junchen.domain.BaseDomain;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -23,6 +24,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @ToString
 @TableName(value = "mw_user_fee_log_opt",autoResultMap = true)
+@UpsertConflict("uid")
 public class MwUserFeeLogOpt extends BaseDomain {
 
     private static final long serialVersionUID = 1L;

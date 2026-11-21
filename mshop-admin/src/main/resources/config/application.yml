@@ -71,12 +71,12 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+      logic-delete-value: true
+      logic-not-delete-value: false
       mapper-locations: classpath*:mapper/**/*Mapper.xml
 # PageHelper分页插件
 pagehelper:
-  helperDialect: mysql
+  helperDialect: postgresql
   reasonable: true
   supportMethodsArguments: true
   params: count=countSql

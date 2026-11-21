@@ -131,7 +131,7 @@ public class JunchenJdOrderServiceImpl extends BaseServiceImpl<JunchenJdOrderMap
     @Override
     public List<JunchenJdOrder> getUnbindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenJdOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenJdOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenJdOrder::getIsDel, false);
         wrapper.in(JunchenJdOrder::getValidCode, JD_VALID_ORDER_STATUS);
         wrapper.isNull(JunchenJdOrder::getUid);
 
@@ -164,7 +164,7 @@ public class JunchenJdOrderServiceImpl extends BaseServiceImpl<JunchenJdOrderMap
     @Override
     public List<JunchenJdOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenJdOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenJdOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenJdOrder::getIsDel, false);
         /*
         *
 sku维度的有效码（-1：未知,2.无效-拆单,3.无效-取消,4.无效-京东帮帮主订单,5.无效-账号异常,
@@ -286,7 +286,7 @@ sku维度的有效码（-1：未知,2.无效-拆单,3.无效-取消,4.无效-京
                 .validCode(16L)
                 .positionId(3100121128L)
                 .siteId(0L)
-                .GoodsInfo(goodsInfo)
+                .goodsInfo(goodsInfo)
                 .build();
         order.setBind(0);
         order.setUid(uid);
@@ -405,7 +405,7 @@ sku维度的有效码（-1：未知,2.无效-拆单,3.无效-取消,4.无效-京
     @Override
     public List<JunchenJdOrder> getSelfUnspreadHbList(Integer limit) {
         LambdaQueryWrapper<JunchenJdOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenJdOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenJdOrder::getIsDel, false);
         wrapper.eq(JunchenJdOrder::getBind, 0);
         wrapper.isNotNull(JunchenJdOrder::getUid);
         wrapper.eq(JunchenJdOrder::getInnerType, 0);

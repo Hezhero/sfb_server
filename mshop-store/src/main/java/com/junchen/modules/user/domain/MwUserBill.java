@@ -8,6 +8,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -59,6 +60,7 @@ public class MwUserBill extends BaseDomain {
 
 
     /** 明细类型 */
+    @TableField("biz_type")
     private String type;
 
     /** tb、pdd、jd、vip、dy、up fans */

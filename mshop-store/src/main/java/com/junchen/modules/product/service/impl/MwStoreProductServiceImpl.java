@@ -204,7 +204,7 @@ public class MwStoreProductServiceImpl extends BaseServiceImpl<StoreProductMappe
 
         LambdaQueryWrapper<MwStoreProduct> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MwStoreProduct::getIsShow, CommonEnum.SHOW_STATUS_1.getValue());
-        wrapper.eq(MwStoreProduct::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(MwStoreProduct::getIsDel, false);
 //        wrapper.eq(MwStoreProduct::getIsIntegral, CommonEnum.SHOW_STATUS_1.getValue());
 
         if(productQueryParam.getIsIntegral()!=null){
@@ -384,7 +384,7 @@ public class MwStoreProductServiceImpl extends BaseServiceImpl<StoreProductMappe
 
        LambdaQueryWrapper<MwStoreProduct> wrapper = new LambdaQueryWrapper<>();
        wrapper.eq(MwStoreProduct::getIsShow, ShopCommonEnum.SHOW_1.getValue())
-                .eq(MwStoreProduct::getIsDel,ShopCommonEnum.DELETE_0.getValue())
+                .eq(MwStoreProduct::getIsDel,false)
                 .orderByDesc(MwStoreProduct::getSort);
         wrapper.eq(MwStoreProduct::getIsIntegral,0);
         // order

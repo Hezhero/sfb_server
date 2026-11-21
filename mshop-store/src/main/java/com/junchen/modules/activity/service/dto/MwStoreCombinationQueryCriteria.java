@@ -19,5 +19,5 @@ public class MwStoreCombinationQueryCriteria {
     private String title;
 
     @Query
-    private Integer isDel;
+    private Boolean isDel;
 }

@@ -29,8 +29,8 @@ public class MybatisConfig {
         properties.setProperty("offsetAsPageNum","true");
         properties.setProperty("rowBoundsWithCount","true");
         properties.setProperty("reasonable","true");
-        //配置mysql数据库的方言
-        properties.setProperty("dialect","mysql");
+        //配置 PostgreSQL 数据库的方言（MySQL 5.7 迁移至 PG 13）
+        properties.setProperty("dialect","postgresql");
         pageHelper.setProperties(properties);
         return pageHelper;
     }

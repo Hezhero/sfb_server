@@ -7,6 +7,7 @@ package com.junchen.modules.pay.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -40,6 +41,7 @@ public class MwPayChannel extends BaseDomain implements Comparable {
     /**
      * 名称 对应yml中pay.name
      * */
+    @TableField("biz_name")
     private String name;
 
     private byte[] certProfileEnc;
@@ -57,7 +59,8 @@ public class MwPayChannel extends BaseDomain implements Comparable {
     /**
      * 是否用于提现 1=是 0=否默认
      * */
-    private Integer extract;
+    @TableField("biz_extract")
+    private Boolean extract;
 
     /** 通道刷新时间*/
     @JsonFormat(pattern = "HH:mm:ss",timezone="GMT+8")
@@ -68,6 +71,7 @@ public class MwPayChannel extends BaseDomain implements Comparable {
     /**
      *'通道类型 1=支付宝原生 2=支付宝三方 6=微信原生 7=微信三方 15=云闪付 0=未知，不启用',
      * */
+    @TableField("biz_type")
     private Integer type;
 
     public void copy(MwPayChannel source){

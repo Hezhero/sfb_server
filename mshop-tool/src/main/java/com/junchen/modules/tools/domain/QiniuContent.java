@@ -37,7 +37,7 @@ public class QiniuContent implements Serializable {
 
 
     /** 文件名称 */
-    @TableField("name")
+    @TableField("biz_name")
     private String name;
 
 
@@ -48,6 +48,7 @@ public class QiniuContent implements Serializable {
 
     /** 文件类型：私有或公开 */
    // @Column(name = "type")
+    @TableField("biz_type")
     private String type;
 
 

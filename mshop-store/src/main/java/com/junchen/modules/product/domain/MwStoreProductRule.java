@@ -11,7 +11,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.junchen.common.handler.PgJsonbTypeHandler;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
@@ -35,7 +35,7 @@ public class MwStoreProductRule extends BaseDomain {
 
 
     /** 规格值 */
-    @TableField(typeHandler = FastjsonTypeHandler.class)
+    @TableField(typeHandler = PgJsonbTypeHandler.class)
     @NotNull(message = "规格名称/值必填")
     private JSONArray ruleValue;
 

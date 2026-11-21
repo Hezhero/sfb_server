@@ -174,7 +174,7 @@ public class MwStoreCouponUserServiceImpl extends BaseServiceImpl<MwStoreCouponU
         long nowTime = System.currentTimeMillis();
         for (MwStoreCouponUser couponUser : storeCouponUsers) {
             MwStoreCouponUserQueryVo queryVo = generator.convert(couponUser, MwStoreCouponUserQueryVo.class);
-            if(couponUser.getIsFail() == 1){
+            if(Boolean.TRUE.equals(couponUser.getIsFail())){
                 queryVo.set_type(CouponEnum.USE_0.getValue());
                 queryVo.set_msg("已失效");
             }else if (couponUser.getStatus() == 1){
@@ -322,7 +322,7 @@ public class MwStoreCouponUserServiceImpl extends BaseServiceImpl<MwStoreCouponU
         long nowTime = System.currentTimeMillis();
         for (MwStoreCouponUser couponUser : mwStoreCouponUserPage.getRecords()) {
             MwStoreCouponUserQueryVo queryVo = generator.convert(couponUser, MwStoreCouponUserQueryVo.class);
-            if(couponUser.getIsFail() == 1){
+            if(Boolean.TRUE.equals(couponUser.getIsFail())){
                 queryVo.set_type(CouponEnum.USE_0.getValue());
                 queryVo.set_msg("已失效");
             }else if (couponUser.getStatus() == 1){

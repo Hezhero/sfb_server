@@ -233,7 +233,7 @@ public class PayController {
                     if(userBank == null) {
                         throw new MshopException("银行卡不存在");
                     }
-                    if(userBank.getSign() == 0) {
+                    if(!Boolean.TRUE.equals(userBank.getSign())) {
                         throw new MshopException("银行卡未签约");
                     }
                     Map<String, Object> ysePayRes = ysePayService.createProtocol(payChannel, orderId, price,loginUser.getUid(),userBank.getProtocolNo());

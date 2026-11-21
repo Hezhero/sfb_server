@@ -144,27 +144,27 @@ public class MwStoreProduct extends BaseDomain {
 
     /** 状态（0：未上架，1：上架） */
     @ApiModelProperty(value = "状态（0：未上架，1：上架）")
-    private Integer isShow;
+    private Boolean isShow;
 
 
     /** 是否热卖 */
     @ApiModelProperty(value = "是否热卖（0：否，1：是）")
-    private Integer isHot;
+    private Boolean isHot;
 
 
     /** 是否优惠 */
     @ApiModelProperty(value = "是否猜你喜欢（0：否，1：是）")
-    private Integer isBenefit;
+    private Boolean isBenefit;
 
 
     /** 是否精品 */
     @ApiModelProperty(value = "是否精品（0：否，1：是）")
-    private Integer isBest;
+    private Boolean isBest;
 
 
     /** 是否新品 */
     @ApiModelProperty(value = "是否新品（0：否，1：是）")
-    private Integer isNew;
+    private Boolean isNew;
 
 
     /** 产品描述 */
@@ -175,12 +175,12 @@ public class MwStoreProduct extends BaseDomain {
 
     /** 是否包邮 */
     @ApiModelProperty(value = "是否包邮")
-    private Integer isPostage;
+    private Boolean isPostage;
 
 
     /** 商户是否代理 0不可代理1可代理 */
     @ApiModelProperty(value = "商户是否代理 0不可代理1可代理 ")
-    private Integer merUse;
+    private Boolean merUse;
 
 
     /** 获得积分 */
@@ -195,6 +195,7 @@ public class MwStoreProduct extends BaseDomain {
     @NotNull(message = "请输入成本价")
     @DecimalMin(value="0.00", message = "成本价不在合法范围内" )
     @DecimalMax(value="99999999.99", message = "成本价不在合法范围内")
+    @TableField("biz_cost")
     private BigDecimal cost;
 
 
@@ -205,12 +206,12 @@ public class MwStoreProduct extends BaseDomain {
 
     /** 砍价状态 0未开启 1开启 */
     @ApiModelProperty(value = "砍价状态 0 未开启 1已开启")
-    private Integer isBargain;
+    private Boolean isBargain;
 
 
     /** 是否优品推荐 */
     @ApiModelProperty(value = "是否优品推荐（0：否，1：是）")
-    private Integer isGood;
+    private Boolean isGood;
 
 
     /** 虚拟销量 */
@@ -234,10 +235,10 @@ public class MwStoreProduct extends BaseDomain {
     private Integer specType;
 
     @ApiModelProperty(value = "是否单独分佣")
-    private Integer isSub;
+    private Boolean isSub;
 
     @ApiModelProperty(value = "是否开启积分兑换")
-    private Integer isIntegral;
+    private Boolean isIntegral;
 
     @TableField(exist = false)
     private MwStoreCategory storeCategory;

@@ -37,7 +37,7 @@ public class MwStoreCustomer extends BaseDomain {
 
 
     /** 是否启用 */
-    private Integer isEnable;
+    private Boolean isEnable;
 
 
     public void copy(MwStoreCustomer source){

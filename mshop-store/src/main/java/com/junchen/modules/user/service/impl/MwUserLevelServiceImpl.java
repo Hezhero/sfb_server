@@ -127,7 +127,7 @@ public class MwUserLevelServiceImpl extends BaseServiceImpl<MwUserLevelMapper, M
         int validTime = systemUserLevelQueryVo.getValidDate() * 86400;
 
         MwUserLevel mwUserLevel = new MwUserLevel();
-        mwUserLevel.setIsForever(systemUserLevelQueryVo.getIsForever());
+        mwUserLevel.setIsForever(Boolean.TRUE.equals(systemUserLevelQueryVo.getIsForever()) ? 1 : 0);
         mwUserLevel.setStatus(ShopCommonEnum.IS_STATUS_1.getValue());
         mwUserLevel.setGrade(systemUserLevelQueryVo.getGrade());
         mwUserLevel.setUid(uid);

@@ -29,7 +29,7 @@ spring:
 #  jpa:
 #    properties:
 #      hibernate:
-#        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
 #    open-in-view: true
 
 #密码加密传输，前端公钥加密，后端私钥解密
@@ -63,8 +63,8 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+      logic-delete-value: true
+      logic-not-delete-value: false
 #  mapper-locations: classpath*:mapper/**/*Mapper.xml
 
 logging:

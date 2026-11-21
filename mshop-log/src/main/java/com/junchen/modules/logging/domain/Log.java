@@ -35,10 +35,12 @@ public class Log extends BaseDomain {
     private String description;
 
     /** 方法名 */
+    @TableField("biz_method")
     private String method;
 
     private Long uid;
 
+    @TableField("biz_type")
     private Integer type;
 
     /** 参数 */
@@ -57,6 +59,7 @@ public class Log extends BaseDomain {
     private String browser;
 
     /** 请求耗时 */
+    @TableField("biz_time")
     private Long time;
 
     /** 异常详细  */

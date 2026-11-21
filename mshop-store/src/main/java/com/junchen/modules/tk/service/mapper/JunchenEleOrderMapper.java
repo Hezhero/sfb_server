@@ -37,7 +37,7 @@ public interface JunchenEleOrderMapper extends CoreMapper<JunchenEleOrder> {
     void unbindUser(@Param("id") String orderId);
 
 
-    @Select("select IFNULL(sum(integral),0) from mw_order_ele " +
+    @Select("select COALESCE(sum(integral),0) from mw_order_ele " +
             "where uid=#{uid} and pay_time <= #{time} and bind=1 and cash=0")
     double totalCash(@Param("uid") Long uid, @Param("time") Date time);
 
@@ -48,39 +48,39 @@ public interface JunchenEleOrderMapper extends CoreMapper<JunchenEleOrder> {
     @Update("update mw_order_ele set cash = 1 where uid=#{uid} and pay_time <= #{time} and cash=0")
     void updateCash(@Param("uid") Long uid, @Param("time") Date time);
 
-    @Select( "select IFNULL(sum(pay_price),0)  from mw_order_ele " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(pay_price),0)  from mw_order_ele " +
+            "where is_del=false")
     Double sumTotalPrice();
 
-    @Select( "select IFNULL(sum(predict_money),0)  from mw_order_ele " +
-            "where is_del=0")
+    @Select( "select COALESCE(sum(predict_money),0)  from mw_order_ele " +
+            "where is_del=false")
     Double sumTotalFee();
 
-    @Select("SELECT IFNULL(sum(pay_price),0) " +
+    @Select("SELECT COALESCE(sum(pay_price),0) " +
             " FROM mw_order_ele ${ew.customSqlSegment}")
     Double sumPrice(@Param(Constants.WRAPPER) Wrapper<JunchenEleOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(predict_money),0) " +
+    @Select("SELECT COALESCE(sum(predict_money),0) " +
             " FROM mw_order_ele ${ew.customSqlSegment}")
     Double sumFee(@Param(Constants.WRAPPER) Wrapper<JunchenEleOrder> wrapper);
 
-    @Select("SELECT IFNULL(sum(pay_price),0) as num," +
-            "DATE_FORMAT(pay_time, '%m-%d') as time " +
-            " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(pay_price),0) as num," +
+            "to_char(pay_time, 'MM-DD') as time " +
+            " FROM mw_order_ele where is_del=false and inner_type=0 and pay_time >= #{time}" +
+            " GROUP BY to_char(pay_time,'YYYY-MM-DD'), to_char(pay_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartList(@Param("time") Date time);
     @Select("SELECT count(trade_id) as num," +
-            "DATE_FORMAT(pay_time, '%m-%d') as time " +
-            " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
+            "to_char(pay_time, 'MM-DD') as time " +
+            " FROM mw_order_ele where is_del=false and inner_type=0 and pay_time >= #{time}" +
+            " GROUP BY to_char(pay_time,'YYYY-MM-DD'), to_char(pay_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListT(@Param("time") Date time);
-    @Select("SELECT IFNULL(sum(predict_money),0) as num," +
-            "DATE_FORMAT(pay_time, '%m-%d') as time " +
-            " FROM mw_order_ele where is_del=0 and inner_type=0 and pay_time >= #{time}" +
-            " GROUP BY DATE_FORMAT(pay_time,'%Y-%m-%d'), DATE_FORMAT(pay_time, '%m-%d') " +
-            " ORDER BY DATE_FORMAT(pay_time, '%Y-%m-%d') ASC")
+    @Select("SELECT COALESCE(sum(predict_money),0) as num," +
+            "to_char(pay_time, 'MM-DD') as time " +
+            " FROM mw_order_ele where is_del=false and inner_type=0 and pay_time >= #{time}" +
+            " GROUP BY to_char(pay_time,'YYYY-MM-DD'), to_char(pay_time, 'MM-DD') " +
+            " ORDER BY to_char(pay_time, 'YYYY-MM-DD') ASC")
     List<ChartDataDto> chartListFee(@Param("time") Date time);
 
 //    @Update("update mw_order_ele set flow_point = 'REFUND'" +
@@ -94,7 +94,7 @@ public interface JunchenEleOrderMapper extends CoreMapper<JunchenEleOrder> {
             " where trade_id = #{id}")
     void invalidRefundOrders(@Param("id") String id);
 
-    @Select("SELECT IFNULL(sum(hb),0) " +
+    @Select("SELECT COALESCE(sum(hb),0) " +
             " FROM mw_order_ele ${ew.customSqlSegment}")
     Double sumHb(@Param(Constants.WRAPPER) Wrapper<JunchenEleOrder> wrapper);
 

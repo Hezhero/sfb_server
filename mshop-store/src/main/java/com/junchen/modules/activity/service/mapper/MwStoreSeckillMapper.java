@@ -17,9 +17,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MwStoreSeckillMapper extends CoreMapper<MwStoreSeckill> {
 
-    @Select("SELECT c.id,c.image,c.price,c.title as storeName,c.is_show as isShow,c.cost," +
+    @Select("SELECT c.id,c.image,c.price,c.title as storeName,c.is_show as isShow,c.biz_cost as cost," +
             "c.is_postage as isPostage,c.postage,c.sales,c.stock,c.is_del as isDel" +
             " FROM mw_store_seckill c " +
-            " WHERE c.id = #{id} and c.is_del = 0 ")
+            " WHERE c.id = #{id} and c.is_del = false ")
     MwStoreProductQueryVo seckillInfo(Long id);
 }

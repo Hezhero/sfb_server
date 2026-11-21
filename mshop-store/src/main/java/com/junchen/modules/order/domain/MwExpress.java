@@ -7,6 +7,7 @@ package com.junchen.modules.order.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -36,6 +37,7 @@ public class MwExpress extends BaseDomain {
 
     /** 快递公司全称 */
     @NotBlank(message = "请输入快递公司名称")
+    @TableField("biz_name")
     private String name;
 
 
@@ -44,7 +46,7 @@ public class MwExpress extends BaseDomain {
 
 
     /** 是否显示 */
-    private Integer isShow;
+    private Boolean isShow;
 
 
     public void copy(MwExpress source){

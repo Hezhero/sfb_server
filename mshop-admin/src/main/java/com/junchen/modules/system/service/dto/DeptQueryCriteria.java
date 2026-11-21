@@ -21,7 +21,7 @@ public class DeptQueryCriteria{
     @Query(type = Query.Type.IN, propName="id")
     private Set<Long> ids;
 
-    @Query(type = Query.Type.INNER_LIKE)
+    @Query(type = Query.Type.INNER_LIKE, propName = "biz_name")
     private String name;
 
     @Query

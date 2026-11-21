@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 public class LocalStorageQueryCriteria{
 
-    @Query(blurry = "name,suffix,type,operate,size")
+    @Query(blurry = "biz_name,suffix,biz_type,operate,size")
     private String blurry;
 
     @Query(type = Query.Type.BETWEEN)

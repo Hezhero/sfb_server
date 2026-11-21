@@ -5,6 +5,7 @@
 package com.junchen.modules.sales.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -35,5 +36,6 @@ public class StoreAfterSalesStatus {
     private Timestamp changeTime;
 
     /** 操作人 */
+    @TableField("biz_operator")
     private String operator;
 }

@@ -7,7 +7,7 @@ package com.junchen.modules.user.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.junchen.common.handler.PgJsonbTypeHandler;
 import com.junchen.domain.BaseDeleteDomain;
 import com.junchen.modules.user.service.dto.TljDataDto;
 import com.junchen.modules.user.service.dto.WechatUserDto;
@@ -39,10 +39,11 @@ public class MwUserUnion extends BaseDeleteDomain {
     /**
      * 名称 对应yml中pay.name
      * */
+    @TableField("biz_name")
     private String name;
 
 
-    @TableField(typeHandler = FastjsonTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
+    @TableField(typeHandler = PgJsonbTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
     private WechatUserDto wxProfile;
 
 
@@ -50,7 +51,7 @@ public class MwUserUnion extends BaseDeleteDomain {
     private String tbPid;
     /**淘礼金领取次数*/
     private Integer tljCount;
-    @TableField(typeHandler = FastjsonTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
+    @TableField(typeHandler = PgJsonbTypeHandler.class,updateStrategy = FieldStrategy.IGNORED)
     private TljDataDto tljData;
 
     public void copy(MwUserUnion source){

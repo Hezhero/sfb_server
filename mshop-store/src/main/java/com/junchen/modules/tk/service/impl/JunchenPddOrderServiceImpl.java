@@ -145,7 +145,7 @@ public class JunchenPddOrderServiceImpl extends BaseServiceImpl<JunchenPddOrderM
     @Override
     public List<JunchenPddOrder> getUnbindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenPddOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenPddOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenPddOrder::getIsDel, false);
         wrapper.in(JunchenPddOrder::getOrderStatus, PDD_VALID_ORDER_STATUS);
         wrapper.isNull(JunchenPddOrder::getUid);
 
@@ -178,7 +178,7 @@ public class JunchenPddOrderServiceImpl extends BaseServiceImpl<JunchenPddOrderM
     @Override
     public List<JunchenPddOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenPddOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenPddOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenPddOrder::getIsDel, false);
         wrapper.notIn(JunchenPddOrder::getOrderStatus, PDD_VALID_ORDER_STATUS);
         wrapper.eq(JunchenPddOrder::getBind, 1);
 
@@ -283,7 +283,7 @@ public class JunchenPddOrderServiceImpl extends BaseServiceImpl<JunchenPddOrderM
                 .groupId(System.currentTimeMillis())
                 .mallId(000000000L)
                 .mallName(shopName)
-                .isDirect(0)
+                .isDirect(false)
                 .authDuoId(10916965L)
                 .bandanRiskConsult(-1)
                 .cpaNew(0)
@@ -428,7 +428,7 @@ public class JunchenPddOrderServiceImpl extends BaseServiceImpl<JunchenPddOrderM
     @Override
     public List<JunchenPddOrder> getSelfUnspreadHbList(Integer limit) {
         LambdaQueryWrapper<JunchenPddOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenPddOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenPddOrder::getIsDel, false);
         wrapper.eq(JunchenPddOrder::getBind, 0);
         wrapper.isNotNull(JunchenPddOrder::getUid);
         wrapper.eq(JunchenPddOrder::getInnerType, 0);

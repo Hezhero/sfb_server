@@ -18,7 +18,7 @@ import java.util.List;
 @Data
 public class LogQueryCriteria {
 
-    @Query(blurry = "username,description,address,requestIp,method,params")
+    @Query(blurry = "username,description,address,requestIp,biz_method,params")
     private String blurry;
 
     @Query
@@ -28,6 +28,6 @@ public class LogQueryCriteria {
     private List<Timestamp> createTime;
 
 
-    @Query
+    @Query(propName = "biz_type")
     private Integer type;
 }

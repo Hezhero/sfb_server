@@ -7,6 +7,7 @@ package com.junchen.modules.mp.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -31,10 +32,12 @@ public class MwWechatTemplate extends BaseDomain {
 
 
     /** 模板名 */
+    @TableField("biz_name")
     private String name;
 
 
     /** 回复内容 */
+    @TableField("biz_content")
     private String content;
 
 
@@ -47,6 +50,7 @@ public class MwWechatTemplate extends BaseDomain {
     private Integer status;
 
     /** 类型：template:模板消息 subscribe:订阅消息 */
+    @TableField("biz_type")
     private String type;
 
     public void copy(MwWechatTemplate source){

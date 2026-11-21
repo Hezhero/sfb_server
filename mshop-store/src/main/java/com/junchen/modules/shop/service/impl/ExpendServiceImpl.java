@@ -102,7 +102,7 @@ public class ExpendServiceImpl extends BaseServiceImpl<ExpendMapper, MwExpend> i
 
     private LambdaQueryWrapper<MwExpend> getWrapperPro(Date start, Date end) {
         LambdaQueryWrapper<MwExpend> wrapperTwo = new LambdaQueryWrapper<>();
-        wrapperTwo.eq(MwExpend::getIsDel, 0);
+        wrapperTwo.eq(MwExpend::getIsDel, false);
 
         if(start != null) {
             wrapperTwo.ge(MwExpend::getAddTime, start);

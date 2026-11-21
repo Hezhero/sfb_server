@@ -7,6 +7,7 @@ package com.junchen.modules.system.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -35,6 +36,7 @@ public class Menu extends BaseDomain {
 
     /** 菜单名称 */
     @NotBlank(message = "请填写菜单名称")
+    @TableField("biz_name")
     private String name;
 
 
@@ -61,6 +63,7 @@ public class Menu extends BaseDomain {
 
 
     /** 缓存 */
+    @TableField("biz_cache")
     private Boolean cache;
 
 
@@ -79,6 +82,7 @@ public class Menu extends BaseDomain {
 
 
     /** 类型，目录、菜单、按钮 */
+    @TableField("biz_type")
     private Integer type;
 
 

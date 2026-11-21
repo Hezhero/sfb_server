@@ -22,7 +22,7 @@ import java.io.Serializable;
 @TableName("mw_wechat_menu")
 public class MwWechatMenu implements Serializable {
 
-    @TableId(value = "`key`")
+    @TableId("biz_key")
     private String key;
 
 

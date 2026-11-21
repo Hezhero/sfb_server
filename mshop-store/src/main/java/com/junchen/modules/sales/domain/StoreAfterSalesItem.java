@@ -30,5 +30,5 @@ public class StoreAfterSalesItem {
     private String cartInfo;
 
     /** 逻辑删除 */
-    private Integer isDel;
+    private Boolean isDel;
 }

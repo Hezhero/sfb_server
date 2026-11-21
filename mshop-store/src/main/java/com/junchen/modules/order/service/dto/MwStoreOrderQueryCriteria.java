@@ -44,7 +44,7 @@ public class MwStoreOrderQueryCriteria {
     private Integer refundStatus;
 
     @Query
-    private Integer isDel;
+    private Boolean isDel;
 
     @Query
     private Integer combinationId;

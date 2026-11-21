@@ -109,12 +109,12 @@ public class MwStoreCombination extends BaseDomain {
 
     /** 推荐 */
     @ApiModelProperty(value = "是否推荐0不推荐1推荐")
-    private Integer isHost;
+    private Boolean isHost;
 
 
     /** 产品状态 */
     @ApiModelProperty(value = "拼团产品状态0不显示 1显示")
-    private Integer isShow;
+    private Boolean isShow;
 
 
     private Integer combination;
@@ -122,7 +122,7 @@ public class MwStoreCombination extends BaseDomain {
 
     /** 商户是否可用1可用0不可用 */
     @ApiModelProperty(value = "商户是否可用1可用0不可用 预留字段")
-    private Integer merUse;
+    private Boolean merUse;
 
 
     /** 拼团内容 */
@@ -152,6 +152,7 @@ public class MwStoreCombination extends BaseDomain {
 
     /** 拼团产品成本价 */
     @ApiModelProperty(value = "拼团产品成本价")
+    @TableField("biz_cost")
     private Integer cost;
 
 

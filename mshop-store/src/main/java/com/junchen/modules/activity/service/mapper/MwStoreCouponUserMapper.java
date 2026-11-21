@@ -21,7 +21,7 @@ import java.util.List;
 @Repository
 public interface MwStoreCouponUserMapper extends CoreMapper<MwStoreCouponUser> {
     @Select("select A.id,A.coupon_title as couponTitle,A.coupon_price as couponPrice," +
-            "A.end_time as endTime,B.use_min_price as useMinPrice,B.type," +
+            "A.end_time as endTime,B.use_min_price as useMinPrice,B.biz_type as type," +
             "B.product_id as productId" +
             " from mw_store_coupon_user A left join mw_store_coupon B " +
             "on A.cid = B.id " +

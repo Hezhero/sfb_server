@@ -98,7 +98,7 @@ public class UserExtractController {
 
         config = new MwUserExtractConfig();
         config.setUid(param.getUid());
-        config.setAutoExtract(1);
+        config.setAutoExtract(true);
 
         extractConfigService.save(config);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

@@ -6,6 +6,7 @@ package com.junchen.modules.tools.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -50,6 +51,7 @@ public class EmailConfig implements Serializable {
 
     /** 发件者用户名 */
    // @Column(name = "user")
+    @TableField("biz_user")
     private String user;
 
 

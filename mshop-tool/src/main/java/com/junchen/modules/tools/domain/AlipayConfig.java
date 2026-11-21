@@ -30,6 +30,7 @@ public class AlipayConfig implements Serializable {
     private Long id;
 
     @NotBlank
+    @TableField("biz_name")
     private String name;
 
     /** 应用ID */

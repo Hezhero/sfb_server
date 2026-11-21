@@ -94,7 +94,7 @@ public class MwStoreProductDto implements Serializable {
     private Integer isPostage;
 
     /** 是否删除 */
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 商户是否代理 0不可代理1可代理 */
     private Integer merUse;

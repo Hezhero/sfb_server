@@ -24,7 +24,7 @@ public interface SystemStoreMapper extends CoreMapper<MwSystemStore> {
     @Select("SELECT*,ROUND(6378.138 * 2 * ASIN(SQRT(POW(SIN((#{lat} * PI() / 180 - latitude * PI() / 180" +
             "    ) / 2),2) + COS(40.0497810000 * PI() / 180) * COS(latitude * PI() / 180) * POW(" +
             "    SIN((#{lon} * PI() / 180 - longitude * PI() / 180) / 2),2))) * 1000) AS distance" +
-            "    FROM mw_system_store WHERE is_del=0 AND is_show = 1 ORDER BY distance ASC"
+            "    FROM mw_system_store WHERE is_del=false AND is_show = true ORDER BY distance ASC"
     )
     List<MwSystemStoreQueryVo> getStoreList(Page page, @Param("lon") double lon, @Param("lat") double lat);
 }

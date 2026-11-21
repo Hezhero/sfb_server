@@ -19,12 +19,12 @@ import org.springframework.stereotype.Repository;
 */
 @Repository
 public interface MwUserExtractMapper extends CoreMapper<MwUserExtract> {
-    @Select("select IFNULL(sum(extract_price),0) from mw_user_extract " +
+    @Select("select COALESCE(sum(extract_price),0) from mw_user_extract " +
             "where status=1 " +
             "and uid=#{uid}")
     double sumPrice(@Param("uid") Long uid);
 
-    @Select("SELECT IFNULL(sum(extract_price),0) " +
+    @Select("SELECT COALESCE(sum(extract_price),0) " +
             " FROM mw_user_extract ${ew.customSqlSegment}")
     Double sumExtractPrice(@Param(Constants.WRAPPER) Wrapper<MwUserExtract> wrapper);
     @Update( "update mw_user_extract set alipay_code = #{userId} where uid = #{uid} AND extract_type = 'alipay' AND status = 0")

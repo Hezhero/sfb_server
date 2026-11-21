@@ -75,7 +75,7 @@ public class MwStoreOrder extends BaseDomain {
 
 
     /** 唯一id(md5加密)类似id */
-     @TableField(value = "`unique`")
+     @TableField("biz_unique")
     private String unique;
 
     /** 管理员备注 */

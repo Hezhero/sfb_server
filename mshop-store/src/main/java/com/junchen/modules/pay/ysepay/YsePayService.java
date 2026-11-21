@@ -104,7 +104,7 @@ public class YsePayService extends PayService{
 	 */
 	public String signProtocol(PayChannelDto certProfile, String phone, MwUserCardQueryVo card, String bankNo) throws Exception {
 		MwUserBank userBank = bankService.findOne(card.getUid(), bankNo);
-		if(userBank != null && userBank.getSign() == 1) {
+		if(userBank != null && Boolean.TRUE.equals(userBank.getSign())) {
 			throw new MshopException("该银行卡已签约");
 		}
 
@@ -162,7 +162,7 @@ public class YsePayService extends PayService{
 						.protocolNo(respCommand.getProtocolNo())
 						.requestNo(requestNo)
 						.phone(phone)
-						.sign(0)
+						.sign(false)
 						.build();
 				bankService.save(userBank);
 			} else {
@@ -208,7 +208,7 @@ public class YsePayService extends PayService{
 				throw new MshopException("该银行卡不存在");
 			}
 			userBank.setProtocolNo(respCommand.getProtocolNo());
-			userBank.setSign(1);
+			userBank.setSign(true);
 			bankService.updateById(userBank);
 			bankService.setDefault(userBank.getUid(), userBank.getId());
 		}

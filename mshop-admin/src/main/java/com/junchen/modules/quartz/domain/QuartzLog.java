@@ -7,6 +7,7 @@ package com.junchen.modules.quartz.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -55,6 +56,7 @@ public class QuartzLog extends BaseDomain {
 
 
     /** 耗时（毫秒） */
+    @TableField("biz_time")
     private Long time;
 
 

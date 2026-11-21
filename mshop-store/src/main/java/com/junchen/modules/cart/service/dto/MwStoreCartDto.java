@@ -40,7 +40,7 @@ public class MwStoreCartDto implements Serializable {
     private Integer isPay;
 
     /** 是否删除 */
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 是否为立即购买 */
     private Integer isNew;

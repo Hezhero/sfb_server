@@ -9,7 +9,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.junchen.common.handler.PgJsonbTypeHandler;
 import com.junchen.modules.user.service.dto.GoodsInfoDto;
 import lombok.*;
 
@@ -79,7 +79,8 @@ public class JunchenJdOrder extends TkOrder {
     /** 佣金比例 */
     private Double commissionRate;
 
-    /** 分成比例（单位：%） */
+    /** 分成比例（单位：%） —— 源库无此列（实际列为 subsidy_rate），不参与 DB 映射 */
+    @TableField(exist = false)
     private Double subsideRate;
 
     /** 补贴比例（单位：%） */
@@ -146,8 +147,8 @@ public class JunchenJdOrder extends TkOrder {
     private Long rid;
 
     /** 京东商品信息 */
-    @TableField(typeHandler = FastjsonTypeHandler.class)
-    private GoodsInfoDto GoodsInfo;
+    @TableField(typeHandler = PgJsonbTypeHandler.class)
+    private GoodsInfoDto goodsInfo;
 
     @TableField(exist = false)
     private String itemId;

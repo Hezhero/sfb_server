@@ -37,6 +37,7 @@ public class MwSystemCity implements Serializable {
 
     /** 省市级别 */
     @NotNull
+    @TableField("biz_level")
     private Integer level;
 
 
@@ -52,6 +53,7 @@ public class MwSystemCity implements Serializable {
 
     /** 名称 */
     @NotBlank
+    @TableField("biz_name")
     private String name;
 
 
@@ -72,7 +74,7 @@ public class MwSystemCity implements Serializable {
 
     /** 是否展示 */
     @NotNull
-    private Integer isShow;
+    private Boolean isShow;
 
     @TableField(exist = false)
     private List<MwSystemCity> children;

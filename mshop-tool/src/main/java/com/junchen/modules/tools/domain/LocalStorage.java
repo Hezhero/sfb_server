@@ -39,6 +39,7 @@ public class LocalStorage implements Serializable {
 
     /** 文件名 */
    // @Column(name = "name")
+    @TableField("biz_name")
     private String name;
 
 
@@ -54,6 +55,7 @@ public class LocalStorage implements Serializable {
 
     /** 类型 */
    // @Column(name = "type")
+    @TableField("biz_type")
     private String type;
 
 

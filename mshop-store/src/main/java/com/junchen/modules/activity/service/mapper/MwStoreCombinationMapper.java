@@ -29,7 +29,7 @@ public interface MwStoreCombinationMapper extends CoreMapper<MwStoreCombination>
     @Select("SELECT c.id,c.effective_time as effectiveTime,c.info,c.image,c.people,c.price, s.sales as sales," +
             "c.title,c.unit_name as unitName,s.price as productPrice FROM mw_store_combination c " +
             "INNER JOIN mw_store_product s ON s.id=c.product_id " +
-            " WHERE c.is_show = 1 AND c.is_del = 0 AND c.start_time < now() " +
+            " WHERE c.is_show = true AND c.is_del = false AND c.start_time < now() " +
             " AND c.stop_time > now() ORDER BY c.sort desc,c.id desc")
     List<MwStoreCombinationQueryVo> getCombList(Page page);
 
@@ -42,13 +42,13 @@ public interface MwStoreCombinationMapper extends CoreMapper<MwStoreCombination>
             ",c.stock,c.stop_time stopTime," +
             "c.title,c.unit_name as unitName,s.price as productPrice FROM mw_store_combination c " +
             "INNER JOIN mw_store_product s ON s.id=c.product_id " +
-            " WHERE c.is_show = 1 AND c.is_del = 0 AND c.id = #{id} ")
+            " WHERE c.is_show = true AND c.is_del = false AND c.id = #{id} ")
     MwStoreCombinationQueryVo getCombDetail(Long id);
 
-    @Select("SELECT c.id,c.image,c.price,c.title as storeName,c.is_show as isShow,c.cost," +
+    @Select("SELECT c.id,c.image,c.price,c.title as storeName,c.is_show as isShow,c.biz_cost as cost," +
             "c.sales,c.stock,c.is_del as isDel" +
             " FROM mw_store_combination c " +
-            " WHERE c.id = #{id} and c.is_del = 0 ")
+            " WHERE c.id = #{id} and c.is_del = false ")
     MwStoreProductQueryVo combinatiionInfo(Long id);
 
     /**

@@ -17,7 +17,7 @@ public class MwAppVersionDto implements Serializable {
 
     private Integer id;
 
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 更新时间 */
     private Date createTime;

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 */
 @Repository
 public interface ExpendMapper extends CoreMapper<MwExpend> {
-    @Select("SELECT IFNULL(sum(money),0) " +
+    @Select("SELECT COALESCE(sum(money),0) " +
             " FROM mw_expend ${ew.customSqlSegment}")
     Double sumPrice(@Param(Constants.WRAPPER) Wrapper<MwExpend> wrapper);
 

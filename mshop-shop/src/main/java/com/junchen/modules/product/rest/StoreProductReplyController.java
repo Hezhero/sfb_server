@@ -59,7 +59,7 @@ public class StoreProductReplyController {
     @PreAuthorize("hasAnyRole('admin','MWSTOREPRODUCTREPLY_ALL','MWSTOREPRODUCTREPLY_EDIT')")
     public ResponseEntity update(@Validated @RequestBody MwStoreProductReply resources){
         resources.setMerchantReplyTime(new Date());
-        resources.setIsReply(ShopCommonEnum.REPLY_1.getValue());
+        resources.setIsReply(true);
         mwStoreProductReplyService.updateById(resources);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }

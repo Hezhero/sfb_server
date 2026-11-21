@@ -48,7 +48,7 @@ public class MwStoreOrderCartInfo implements Serializable {
 
 
     /** 唯一id */
-    @TableField(value = "`unique`")
+    @TableField("biz_unique")
     private String unique;
 
     /** 是否能售后0不能1能 */

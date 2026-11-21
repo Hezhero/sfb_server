@@ -26,10 +26,12 @@ public class DictDetail extends BaseDomain {
 
 
     /** 字典标签 */
+    @TableField("biz_label")
     private String label;
 
 
     /** 字典值 */
+    @TableField("biz_value")
     private String value;
 
 

@@ -86,7 +86,7 @@ public class MwStoreProductAttrValue implements Serializable {
 
 
     /** 唯一值 */
-     @TableField(value = "`unique`")
+     @TableField("biz_unique")
      @ApiModelProperty(value = "唯一值")
     private String unique;
 
@@ -94,6 +94,7 @@ public class MwStoreProductAttrValue implements Serializable {
     /** 成本价 */
     @ApiModelProperty(value = "成本价")
     @JsonSerialize(using = BigDecimalSerializer.class)
+    @TableField("biz_cost")
     private BigDecimal cost;
 
     /** 商品条码 */

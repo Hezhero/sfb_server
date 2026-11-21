@@ -20,7 +20,7 @@ public class MwStoreProductQueryCriteria {
 
     // 精确
     @Query
-    private Integer isDel;
+    private Boolean isDel;
 
     @Query
     private Integer isShow;

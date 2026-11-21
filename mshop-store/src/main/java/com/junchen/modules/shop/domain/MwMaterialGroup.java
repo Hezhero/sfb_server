@@ -8,6 +8,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class MwMaterialGroup extends BaseDomain {
 
 
     /** 分组名 */
+    @TableField("biz_name")
     private String name;
 
 

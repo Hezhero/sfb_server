@@ -7,6 +7,7 @@ package com.junchen.modules.mp.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -53,6 +54,7 @@ public class MwArticle extends BaseDomain {
 
 
     @NotBlank(message = "请填写文章详情")
+    @TableField("biz_content")
     private String content;
 
 
@@ -82,7 +84,7 @@ public class MwArticle extends BaseDomain {
 
 
     /** 是否隐藏 */
-    private Integer hide;
+    private Boolean hide;
 
 
     /** 管理员id */
@@ -98,11 +100,11 @@ public class MwArticle extends BaseDomain {
 
 
     /** 是否热门(小程序) */
-    private Integer isHot;
+    private Boolean isHot;
 
 
     /** 是否轮播图(小程序) */
-    private Integer isBanner;
+    private Boolean isBanner;
 
 
     public void copy(MwArticle source){

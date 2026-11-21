@@ -26,7 +26,7 @@ public interface StoreProductAttrValueMapper extends CoreMapper<MwStoreProductAt
      * @return
      */
     @Update("update mw_store_product_attr_value set stock=stock+#{num}, sales=sales-#{num}" +
-            " where product_id=#{productId} and `unique`=#{unique}")
+            " where product_id=#{productId} and biz_unique=#{unique}")
     int incStockDecSales(@Param("num") Integer num,@Param("productId") Long productId,
                                     @Param("unique")  String unique);
 
@@ -40,7 +40,7 @@ public interface StoreProductAttrValueMapper extends CoreMapper<MwStoreProductAt
      */
 
     @Update("update mw_store_product_attr_value set stock=stock+#{num}, pink_stock=pink_stock+#{num}, sales=sales-#{num}" +
-            " where product_id=#{productId} and `unique`=#{unique}")
+            " where product_id=#{productId} and biz_unique=#{unique}")
     int incCombinationStockDecSales(@Param("num") Integer num,@Param("productId") Long productId,
                          @Param("unique")  String unique);
 
@@ -53,7 +53,7 @@ public interface StoreProductAttrValueMapper extends CoreMapper<MwStoreProductAt
      * @return
      */
     @Update("update mw_store_product_attr_value set stock=stock+#{num},seckill_stock=seckill_stock+#{num}, sales=sales-#{num}" +
-            " where product_id=#{productId} and `unique`=#{unique}")
+            " where product_id=#{productId} and biz_unique=#{unique}")
     int incSeckillStockDecSales(@Param("num") Integer num,@Param("productId") Long productId,
                                     @Param("unique")  String unique);
 
@@ -76,7 +76,7 @@ public interface StoreProductAttrValueMapper extends CoreMapper<MwStoreProductAt
      * @return
      */
     @Update("update mw_store_product_attr_value set stock=stock-#{num}, pink_stock=pink_stock-#{num} ,sales=sales+#{num}" +
-            " where product_id=#{productId} and `unique`=#{unique} and stock >= #{num} and pink_stock>=#{num}")
+            " where product_id=#{productId} and biz_unique=#{unique} and stock >= #{num} and pink_stock>=#{num}")
     int decCombinationStockIncSales(@Param("num") Integer num, @Param("productId") Long productId,
                                     @Param("unique") String unique);
 
@@ -88,7 +88,7 @@ public interface StoreProductAttrValueMapper extends CoreMapper<MwStoreProductAt
      * @return
      */
     @Update("update mw_store_product_attr_value set stock=stock-#{num}, seckill_stock=seckill_stock-#{num},sales=sales+#{num}" +
-            " where product_id=#{productId} and `unique`=#{unique} and stock >= #{num} and seckill_stock>=#{num}")
+            " where product_id=#{productId} and biz_unique=#{unique} and stock >= #{num} and seckill_stock>=#{num}")
     int decSeckillStockIncSales(@Param("num") Integer num, @Param("productId") Long productId,
                                 @Param("unique") String unique);
 }

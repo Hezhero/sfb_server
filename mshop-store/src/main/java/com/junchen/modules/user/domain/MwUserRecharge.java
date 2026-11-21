@@ -7,6 +7,7 @@ package com.junchen.modules.user.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -77,6 +78,7 @@ public class MwUserRecharge extends BaseDomain {
     /**
      * 加盟类型 0=年卡 2=月卡
      * */
+    @TableField("biz_type")
     private Integer type;
 
     public void copy(MwUserRecharge source){

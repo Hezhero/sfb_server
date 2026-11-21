@@ -126,7 +126,7 @@ public class JunchenMtOrderServiceImpl extends BaseServiceImpl<JunchenMtOrderMap
     @Override
     public List<JunchenMtOrder> getUnbindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenMtOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenMtOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenMtOrder::getIsDel, false);
         wrapper.in(JunchenMtOrder::getItemStatus, OrderUtil.MT_VALID_ORDER_STATUS);
         wrapper.in(JunchenMtOrder::getItemBizStatus, OrderUtil.MT_VALID_ORDER_BIZ_STATUS);
         wrapper.isNull(JunchenMtOrder::getUid);
@@ -159,7 +159,7 @@ public class JunchenMtOrderServiceImpl extends BaseServiceImpl<JunchenMtOrderMap
     @Override
     public List<JunchenMtOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenMtOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenMtOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenMtOrder::getIsDel, false);
         wrapper.and(i->i.notIn(JunchenMtOrder::getItemStatus, OrderUtil.MT_VALID_ORDER_STATUS)
                 .or().notIn(JunchenMtOrder::getItemBizStatus, OrderUtil.MT_VALID_ORDER_BIZ_STATUS));
         wrapper.eq(JunchenMtOrder::getBind, 1);
@@ -397,7 +397,7 @@ public class JunchenMtOrderServiceImpl extends BaseServiceImpl<JunchenMtOrderMap
     @Override
     public List<JunchenMtOrder> getSelfUnspreadHbList(Integer day, Integer limit) {
         LambdaQueryWrapper<JunchenMtOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenMtOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenMtOrder::getIsDel, false);
         wrapper.eq(JunchenMtOrder::getBind, 0);
         wrapper.isNotNull(JunchenMtOrder::getUid);
         wrapper.eq(JunchenMtOrder::getInnerType, 0);

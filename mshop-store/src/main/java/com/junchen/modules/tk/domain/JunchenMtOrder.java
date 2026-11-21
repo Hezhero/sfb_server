@@ -121,6 +121,7 @@ public class JunchenMtOrder extends TkOrder {
     private Date usedDate;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Date refundDate;
+    @TableField("biz_comment")
     private String comment;
     private String bizType;
     /**

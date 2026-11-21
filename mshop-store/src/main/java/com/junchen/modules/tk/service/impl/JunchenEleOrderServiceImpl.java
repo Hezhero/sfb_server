@@ -118,7 +118,7 @@ public class JunchenEleOrderServiceImpl extends BaseServiceImpl<JunchenEleOrderM
     public List<JunchenEleOrder> getUnbindOrderList(Integer prior) {
         //抖音订单状态 PAY_SUCC CONFIRM REFUND
         LambdaQueryWrapper<JunchenEleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenEleOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenEleOrder::getIsDel, false);
         wrapper.ne(JunchenEleOrder::getOrderStatus, ELE_NOT_VALID_ORDER_STATUS);
         wrapper.isNull(JunchenEleOrder::getUid);
 
@@ -150,7 +150,7 @@ public class JunchenEleOrderServiceImpl extends BaseServiceImpl<JunchenEleOrderM
     @Override
     public List<JunchenEleOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenEleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenEleOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenEleOrder::getIsDel, false);
         wrapper.eq(JunchenEleOrder::getOrderStatus, ELE_NOT_VALID_ORDER_STATUS);
         wrapper.eq(JunchenEleOrder::getBind, 1);
 
@@ -372,7 +372,7 @@ public class JunchenEleOrderServiceImpl extends BaseServiceImpl<JunchenEleOrderM
     @Override
     public List<JunchenEleOrder> getSelfUnspreadHbList(Integer day, Integer limit) {
         LambdaQueryWrapper<JunchenEleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenEleOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenEleOrder::getIsDel, false);
         wrapper.eq(JunchenEleOrder::getBind, 0);
         wrapper.isNotNull(JunchenEleOrder::getUid);
         wrapper.eq(JunchenEleOrder::getInnerType, 0);

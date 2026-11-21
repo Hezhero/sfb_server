@@ -32,6 +32,7 @@ public class MwWechatLive implements Serializable {
 
     /** 直播间标题 */
     @NotBlank
+    @TableField("biz_name")
     private String name;
 
 
@@ -98,6 +99,7 @@ public class MwWechatLive implements Serializable {
 
     /** 直播间类型 1：推流 0：手机直播 */
     @NotNull
+    @TableField("biz_type")
     private Integer type;
 
 
@@ -108,22 +110,22 @@ public class MwWechatLive implements Serializable {
 
     /** 是否关闭点赞 【0：开启，1：关闭】 */
     @NotNull
-    private Integer closeLike;
+    private Boolean closeLike;
 
 
     /** 是否关闭货架 【0：开启，1：关闭】 */
     @NotNull
-    private Integer closeGoods;
+    private Boolean closeGoods;
 
     /** 是否关闭评论 【0：开启，1：关闭】 */
     @NotNull
-    private Integer closeComment;
+    private Boolean closeComment;
     @NotNull
-    private Integer closeReplay  ; // 是否关闭回放 1 关闭
+    private Boolean closeReplay  ; // 是否关闭回放 1 关闭
     @NotNull
-    private Integer closeShare ;   //  是否关闭分享 1 关闭
+    private Boolean closeShare ;   //  是否关闭分享 1 关闭
     @NotNull
-    private Integer closeKf ; // 是否关闭客服，1 关闭
+    private Boolean closeKf ; // 是否关闭客服，1 关闭
 
     private String productId;
 

@@ -68,5 +68,5 @@ public class MwSystemUserLevelDto implements Serializable {
     private Integer addTime;
 
     /** 是否删除.1=删除,0=未删除 */
-    private Integer isDel;
+    private Boolean isDel;
 }

@@ -7,6 +7,7 @@ package com.junchen.modules.cart.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class MwStoreCart extends BaseDomain {
 
 
     /** 类型 */
+    @TableField("biz_type")
     private String type;
 
 
@@ -56,12 +58,12 @@ public class MwStoreCart extends BaseDomain {
 
 
     /** 0 = 未购买 1 = 已购买 */
-    private Integer isPay;
+    private Boolean isPay;
 
 
 
     /** 是否为立即购买 */
-    private Integer isNew;
+    private Boolean isNew;
 
 
     /** 拼团id */

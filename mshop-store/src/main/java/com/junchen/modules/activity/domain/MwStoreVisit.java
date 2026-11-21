@@ -48,6 +48,7 @@ public class MwStoreVisit implements Serializable {
 
 
     /** 产品类型 */
+    @TableField("biz_type")
     private String type;
 
 
@@ -60,6 +61,7 @@ public class MwStoreVisit implements Serializable {
 
 
     /** 备注描述 */
+    @TableField("biz_content")
     private String content;
 
 

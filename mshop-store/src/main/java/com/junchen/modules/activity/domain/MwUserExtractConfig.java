@@ -23,7 +23,7 @@ public class MwUserExtractConfig extends BaseDomain {
     private Long uid;
 
     /** 0=可以提现 1=禁止提现 */
-    private Integer autoExtract;
+    private Boolean autoExtract;
 
 
 }

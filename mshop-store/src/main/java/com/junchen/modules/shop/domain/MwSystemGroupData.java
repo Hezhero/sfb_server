@@ -7,6 +7,7 @@ package com.junchen.modules.shop.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class MwSystemGroupData extends BaseDomain {
 
 
     /** 数据组对应的数据值（json数据） */
+    @TableField("biz_value")
     private String value;
 
 

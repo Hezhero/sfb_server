@@ -30,5 +30,5 @@ public class MwUserFeedbackDto implements Serializable {
     /** 更新时间 */
     private Date updateTime;
 
-    private Integer isDel;
+    private Boolean isDel;
 }

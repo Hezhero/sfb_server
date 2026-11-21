@@ -274,7 +274,7 @@ public class MwStoreCombinationServiceImpl extends BaseServiceImpl<MwStoreCombin
             status = ShopCommonEnum.SHOW_1.getValue();
         }
         MwStoreCombination mwStoreCombination = new MwStoreCombination();
-        mwStoreCombination.setIsShow(status);
+        mwStoreCombination.setIsShow(ShopCommonEnum.SHOW_1.getValue().equals(status));
         mwStoreCombination.setId(id);
         this.saveOrUpdate(mwStoreCombination);
     }

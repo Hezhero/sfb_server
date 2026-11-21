@@ -15,7 +15,7 @@ import lombok.Data;
 public class MwUserBillQueryCriteria {
     @Query(type = Query.Type.EQUAL)
     private String category = "";
-    @Query(type = Query.Type.EQUAL)
+    @Query(type = Query.Type.EQUAL, propName = "biz_type")
     private String type  = "";
     @Query(type = Query.Type.EQUAL)
     private Integer pm;

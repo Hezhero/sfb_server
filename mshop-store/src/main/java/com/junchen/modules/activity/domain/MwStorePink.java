@@ -92,12 +92,12 @@ public class MwStorePink extends BaseDomain {
 
     /** 是否发送模板消息0未发送1已发送 */
     @ApiModelProperty(value = "是否发送模板消息0未发送1已发送")
-    private Integer isTpl;
+    private Boolean isTpl;
 
 
     /** 是否退款 0未退款 1已退款 */
     @ApiModelProperty(value = "是否退款 0未退款 1已退款")
-    private Integer isRefund;
+    private Boolean isRefund;
 
 
     /** 状态1进行中2已完成3未完成 */

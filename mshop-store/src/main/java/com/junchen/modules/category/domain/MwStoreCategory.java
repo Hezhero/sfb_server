@@ -46,7 +46,7 @@ public class MwStoreCategory extends BaseDomain {
 
 
     /** 是否推荐 */
-    private Integer isShow;
+    private Boolean isShow;
 
 
 

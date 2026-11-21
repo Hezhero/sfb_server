@@ -33,7 +33,7 @@ public interface MwStoreProductRelationMapper extends CoreMapper<MwStoreProductR
 //    List<MwStoreProductRelationQueryVo> selectRelationList(Page page, @Param("uid") Long uid, @Param("type") String type);
 
     @Select("select * from mw_store_product_relation A " +
-            "where A.type=#{type} and A.uid=#{uid} and A.is_del = 0 order by A.create_time desc")
+            "where A.type=#{type} and A.uid=#{uid} and A.is_del = false order by A.create_time desc")
     List<MwStoreProductRelationQueryVo> selectRelationList(Page page, @Param("uid") Long uid, @Param("type") String type);
 
 }

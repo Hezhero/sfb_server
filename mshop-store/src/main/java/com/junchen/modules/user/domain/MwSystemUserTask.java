@@ -7,6 +7,7 @@ package com.junchen.modules.user.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.junchen.domain.BaseDomain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class MwSystemUserTask extends BaseDomain {
 
 
     /** 任务名称 */
+    @TableField("biz_name")
     private String name;
 
 
@@ -53,11 +55,11 @@ public class MwSystemUserTask extends BaseDomain {
 
 
     /** 是否显示 */
-    private Integer isShow;
+    private Boolean isShow;
 
 
     /** 是否务必达成任务,1务必达成,0=满足其一 未用*/
-    private Integer isMust;
+    private Boolean isMust;
 
 
     /** 任务说明 */

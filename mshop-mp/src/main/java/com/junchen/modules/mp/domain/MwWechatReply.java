@@ -27,15 +27,17 @@ public class MwWechatReply implements Serializable {
 
 
     /** 关键字 */
-    @TableField(value = "`key`")
+    @TableField("biz_key")
     private String key;
 
 
     /** 回复类型 */
+    @TableField("biz_type")
     private String type;
 
 
     /** 回复数据 */
+    @TableField("biz_data")
     private String data;
 
 
@@ -44,7 +46,7 @@ public class MwWechatReply implements Serializable {
 
 
     /** 是否隐藏 */
-    private Integer hide;
+    private Boolean hide;
 
 
     public void copy(MwWechatReply source){

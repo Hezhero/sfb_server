@@ -15,5 +15,5 @@ import lombok.Data;
 public class MwStoreCouponQueryCriteria {
 
     @Query
-    private Integer isDel;
+    private Boolean isDel;
 }

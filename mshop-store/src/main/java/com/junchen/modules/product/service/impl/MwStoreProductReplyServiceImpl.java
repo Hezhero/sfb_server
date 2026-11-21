@@ -212,7 +212,7 @@ public class MwStoreProductReplyServiceImpl extends BaseServiceImpl<StoreProduct
     public String replyPer(long productId) {
        LambdaQueryWrapper<MwStoreProductReply> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MwStoreProductReply::getProductId,productId)
-                .eq(MwStoreProductReply::getIsDel,ShopCommonEnum.DELETE_0.getValue())
+                .eq(MwStoreProductReply::getIsDel,false)
                 .eq(MwStoreProductReply::getProductScore,5);
         Long productScoreCount = this.baseMapper.selectCount(wrapper);
         Long count = productReplyCount(productId);

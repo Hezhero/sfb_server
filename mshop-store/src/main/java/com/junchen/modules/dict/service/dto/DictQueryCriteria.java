@@ -14,6 +14,6 @@ import lombok.Data;
 @Data
 public class DictQueryCriteria{
 
-    @Query(blurry = "name,remark")
+    @Query(blurry = "biz_name,remark")
     private String blurry;
 }

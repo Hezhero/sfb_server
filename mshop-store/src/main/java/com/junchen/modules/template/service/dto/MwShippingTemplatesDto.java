@@ -39,7 +39,7 @@ public class MwShippingTemplatesDto implements Serializable {
 
     private Timestamp updateTime;
 
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 排序 */
     private Integer sort;

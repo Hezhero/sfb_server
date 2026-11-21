@@ -20,14 +20,14 @@ import java.util.List;
 @Repository
 public interface StoreCartMapper extends CoreMapper<MwStoreCart> {
 
-    @Select("select IFNULL(sum(cart_num),0) from mw_store_cart " +
-            "where is_pay=0 and is_del=0 and is_new=0 and uid=#{uid}")
+    @Select("select COALESCE(sum(cart_num),0) from mw_store_cart " +
+            "where is_pay=false and is_del=false and is_new=false and uid=#{uid}")
     int cartSum(@Param("uid") Long uid);
 
 
     @Select("SELECT t.cate_name as catename from mw_store_cart c  " +
             "LEFT JOIN mw_store_product p on c.product_id = p.id  " +
             "LEFT JOIN mw_store_category t on p.cate_id = t.id " +
-            "WHERE c.is_pay = 1")
+            "WHERE c.is_pay = true")
     List<CountDto> findCateName();
 }

@@ -48,11 +48,11 @@ public class MwUserBank extends BaseDomain {
     @ApiModelProperty(value = "业务请求号")
     private String requestNo;
     @ApiModelProperty(value = "支付默认 1=默认")
-    private Integer isDefault;
+    private Boolean isDefault;
     @ApiModelProperty(value = "提现默认 1=默认")
-    private Integer extractDefault;
+    private Boolean extractDefault;
     @ApiModelProperty(value = "是否签约 0=未签约 1=签约")
-    private Integer sign;
+    private Boolean sign;
 
     @ApiModelProperty(value = "手机号")
     private String phone;

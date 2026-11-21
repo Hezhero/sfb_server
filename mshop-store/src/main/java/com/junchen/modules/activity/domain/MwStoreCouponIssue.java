@@ -67,7 +67,7 @@ public class MwStoreCouponIssue extends BaseDomain {
 
     /** 是否无限张数 */
     @ApiModelProperty(value = "是否无限张数1：是 0：否")
-    private Integer isPermanent;
+    private Boolean isPermanent;
 
 
     /** 1 正常 0 未开启 -1 已无效 */

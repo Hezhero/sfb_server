@@ -29,5 +29,5 @@ public class MwStoreProductRuleDto implements Serializable {
 
     private Timestamp updateTime;
 
-    private Integer isDel;
+    private Boolean isDel;
 }

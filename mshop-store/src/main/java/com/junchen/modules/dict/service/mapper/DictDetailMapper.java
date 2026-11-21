@@ -19,6 +19,6 @@ import java.util.List;
 @Repository
 public interface DictDetailMapper extends CoreMapper<DictDetail> {
 
-    @Select("<script>SELECT d.* from system_dict_detail d LEFT JOIN system_dict t on d.dict_id = t.id where d.is_del=0 <if test = \"label !=null\" > and d.label LIKE concat('%', #{label}, '%') </if> <if test = \"dictName != ''||dictName !=null\" > AND t.name = #{dictName} order by d.sort asc</if></script>")
+    @Select("<script>SELECT d.id,d.dict_id,d.biz_label as label,d.biz_value as value,d.sort,d.is_del,d.create_time,d.update_time from system_dict_detail d LEFT JOIN system_dict t on d.dict_id = t.id where d.is_del=false <if test = \"label !=null\" > and d.biz_label LIKE concat('%', #{label}, '%') </if> <if test = \"dictName != ''||dictName !=null\" > AND t.biz_name = #{dictName} order by d.sort asc</if></script>")
     List<DictDetail> selectDictDetailList(@Param("label") String label,@Param("dictName") String dictName);
 }

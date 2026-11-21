@@ -7,6 +7,7 @@ package com.junchen.modules.user.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.junchen.domain.BaseDomain;
@@ -36,6 +37,7 @@ public class MwUserPool extends BaseDomain {
     /** 退款次数 */
     private Integer refund;
     /** 退款类型设置 0=默认 订单退款 1=系统检测到异常订单 */
+    @TableField("biz_type")
     private Integer type;
 
     public void copy(MwUserPool source){

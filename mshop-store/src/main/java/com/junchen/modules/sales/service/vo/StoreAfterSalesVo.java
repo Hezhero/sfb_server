@@ -58,7 +58,7 @@ public class StoreAfterSalesVo {
     private Timestamp createTime;
 
     /** 逻辑删除 */
-    private Integer isDel;
+    private Boolean isDel;
 
     /** 用户id */
     private Long userId;

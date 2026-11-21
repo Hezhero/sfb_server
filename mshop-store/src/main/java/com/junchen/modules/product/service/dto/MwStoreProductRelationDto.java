@@ -51,6 +51,6 @@ public class MwStoreProductRelationDto implements Serializable {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp updateTime;
 
-    private Integer isDel;
+    private Boolean isDel;
 }
 

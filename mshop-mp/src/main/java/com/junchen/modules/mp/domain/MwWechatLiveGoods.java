@@ -60,6 +60,7 @@ public class MwWechatLiveGoods implements Serializable {
 
     /** 商品名称 */
     @NotBlank
+    @TableField("biz_name")
     private String name;
 
 

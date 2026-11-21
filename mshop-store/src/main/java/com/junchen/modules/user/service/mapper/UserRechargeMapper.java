@@ -21,7 +21,7 @@ import java.util.Date;
 */
 @Repository
 public interface UserRechargeMapper extends CoreMapper<MwUserRecharge> {
-    @Select("SELECT IFNULL(sum(price),0) " +
+    @Select("SELECT COALESCE(sum(price),0) " +
             " FROM mw_user_recharge ${ew.customSqlSegment}")
     Double sumPrice(@Param(Constants.WRAPPER) Wrapper<MwUserRecharge> wrapper);
 

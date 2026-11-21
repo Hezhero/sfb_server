@@ -6,6 +6,7 @@ package com.junchen.modules.shop.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class MwSystemConfig implements Serializable {
 
 
     /** 默认值 */
+    @TableField("biz_value")
     private String value;
 
 

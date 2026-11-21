@@ -3,6 +3,7 @@
  * All rights reserved, Designed By syh.hzhero.cn
  */
 package com.junchen.modules.shop.domain;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -45,7 +46,8 @@ public class MwAppVersion extends BaseDomain {
 
     @NotNull(message = "是否启用不能为空")
     /** 是否启用 */
-    private Integer enable;
+    @TableField("biz_enable")
+    private Boolean enable;
 
     private String platformName;
 

@@ -133,7 +133,7 @@ public class JunchenTbOrderServiceImpl extends BaseServiceImpl<JunchenTbOrderMap
     @Override
     public List<JunchenTbOrder> getUnbindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenTbOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenTbOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenTbOrder::getIsDel, false);
         wrapper.ne(JunchenTbOrder::getTkStatus, OrderUtil.TB_NOT_VALID_ORDER_STATUS);
         wrapper.isNull(JunchenTbOrder::getUid);
 
@@ -165,7 +165,7 @@ public class JunchenTbOrderServiceImpl extends BaseServiceImpl<JunchenTbOrderMap
     @Override
     public List<JunchenTbOrder> getRefundAndBindOrderList(Integer prior) {
         LambdaQueryWrapper<JunchenTbOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenTbOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenTbOrder::getIsDel, false);
         wrapper.and(i->i.eq(JunchenTbOrder::getTkStatus, OrderUtil.TB_NOT_VALID_ORDER_STATUS).or().eq(JunchenTbOrder::getRefundTag, 1));
         wrapper.eq(JunchenTbOrder::getBind, 1);
 
@@ -400,7 +400,7 @@ public class JunchenTbOrderServiceImpl extends BaseServiceImpl<JunchenTbOrderMap
     @Override
     public List<JunchenTbOrder> getSelfUnspreadHbList(Integer limit) {
         LambdaQueryWrapper<JunchenTbOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JunchenTbOrder::getIsDel, CommonEnum.DEL_STATUS_0.getValue());
+        wrapper.eq(JunchenTbOrder::getIsDel, false);
         wrapper.eq(JunchenTbOrder::getBind, 0);
         wrapper.isNotNull(JunchenTbOrder::getUid);
         wrapper.eq(JunchenTbOrder::getInnerType, 0);

@@ -41,7 +41,7 @@ public class MwUserExtractConfigServiceImpl extends BaseServiceImpl<MwUserExtrac
     @Override
     public boolean canExtract(Long uid) {
         MwUserExtractConfig extractConfig = mapper.selectById(uid);
-        return extractConfig == null || extractConfig.getAutoExtract() == 0;
+        return extractConfig == null || !Boolean.TRUE.equals(extractConfig.getAutoExtract());
     }
 
     @Override
